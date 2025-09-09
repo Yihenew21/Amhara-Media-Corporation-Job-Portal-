@@ -86,7 +86,13 @@ export const useJobs = () => {
 
       let fileName = null;
       let cvFileName = null;
+        fileName = `${user.id}/${Date.now()}-${cvFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('cvs')
+          .upload(fileName, cvFile);
 
+        if (uploadError) {
+          throw uploadError;
       // Upload CV file if provided
       if (cvFile) {
         fileName = `${user.id}/${Date.now()}-${cvFile.name}`;
@@ -114,6 +120,8 @@ export const useJobs = () => {
       if (applicationError) {
         // Clean up uploaded file if application creation fails
         if (fileName) {
+          await supabase.storage.from('cvs').remove([fileName]);
+        }
           await supabase.storage.from('cvs').remove([fileName]);
         }
         throw applicationError;

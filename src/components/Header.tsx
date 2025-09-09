@@ -57,6 +57,16 @@ const Header = () => {
               Admin Dashboard
             </Link>
           )}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                isActive("/admin") ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              Admin Dashboard
+            </Link>
+          )}
           <Link
             to="/about"
             className={`text-sm font-medium transition-colors hover:text-primary ${
@@ -143,6 +153,15 @@ const Header = () => {
             >
               Jobs
             </Link>
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="block text-sm font-medium text-muted-foreground hover:text-primary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Admin Dashboard
+              </Link>
+            )}
             {isAdmin && (
               <Link
                 to="/admin"
