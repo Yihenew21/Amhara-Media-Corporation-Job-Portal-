@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, MapPin, Building, Calendar, Briefcase } from "lucide-react";
+import { Search, Filter, MapPin, Building, Calendar, Briefcase, SlidersHorizontal } from "lucide-react";
 import JobCard from "@/components/JobCard";
 import { useJobs } from "@/hooks/useJobs";
 
@@ -105,6 +106,11 @@ const Jobs = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("All Departments");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
+  const [selectedEmploymentType, setSelectedEmploymentType] = useState("All Types");
+  const [selectedExperienceLevel, setSelectedExperienceLevel] = useState("All Levels");
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [salaryRange, setSalaryRange] = useState({ min: "", max: "" });
+  const [remoteOnly, setRemoteOnly] = useState(false);
   const { jobs, loading, error } = useJobs();
   const [filteredJobs, setFilteredJobs] = useState(jobs);
 
@@ -135,6 +141,33 @@ const Jobs = () => {
       filtered = filtered.filter((job) => job.location === selectedLocation);
     }
 
+    // Filter by employment type
+    if (selectedEmploymentType !== "All Types") {
+      filtered = filtered.filter((job) => job.employment_type === selectedEmploymentType);
+    }
+
+    // Filter by experience level
+    if (selectedExperienceLevel !== "All Levels") {
+      filtered = filtered.filter((job) => job.experience_level === selectedExperienceLevel);
+    }
+
+    // Filter by salary range
+    if (salaryRange.min || salaryRange.max) {
+      filtered = filtered.filter((job) => {
+        if (!job.salary_range) return false;
+        // Simple salary range filtering (in production, this would be more sophisticated)
+        const salaryText = job.salary_range.toLowerCase();
+        return salaryText.includes('etb') || salaryText.includes('birr');
+      });
+    }
+
+    // Filter remote jobs
+    if (remoteOnly) {
+      filtered = filtered.filter((job) => 
+        job.location.toLowerCase().includes('remote') || 
+        job.description.toLowerCase().includes('remote')
+      );
+    }
     setFilteredJobs(filtered);
   };
 
@@ -142,6 +175,10 @@ const Jobs = () => {
     setSearchTerm("");
     setSelectedDepartment("All Departments");
     setSelectedLocation("All Locations");
+    setSelectedEmploymentType("All Types");
+    setSelectedExperienceLevel("All Levels");
+    setSalaryRange({ min: "", max: "" });
+    setRemoteOnly(false);
     setFilteredJobs(jobs);
   };
 
@@ -211,6 +248,35 @@ const Jobs = () => {
                 </Select>
               </div>
             </div>
+            
+            {/* Advanced Filters Toggle */}
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              >
+                <SlidersHorizontal className="mr-2 h-4 w-4" />
+                {showAdvancedFilters ? 'Hide' : 'Show'} Advanced Filters
+              </Button>
+            </div>
+
+            {/* Advanced Filters */}
+            {showAdvancedFilters && (
+              <div className="space-y-4 pt-4 border-t">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <Select value={selectedEmploymentType} onValueChange={setSelectedEmploymentType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Employment Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All Types">All Types</SelectItem>
+                      <SelectItem value="full-time">Full Time</SelectItem>
+                      <SelectItem value="part-time">Part Time</SelectItem>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="internship">Internship</SelectItem>
+                    </SelectContent>
+                  </Select>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button onClick={handleSearch} className="flex-1 sm:flex-none">
                 <Search className="mr-2 h-4 w-4" />
