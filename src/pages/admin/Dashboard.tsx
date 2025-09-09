@@ -268,14 +268,30 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="applications">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Application Management</h2>
+              <Button asChild>
+                <Link to="/admin/applications">
+                  <FileText className="mr-2 h-4 w-4" />
+                  View All Applications
+                </Link>
+              </Button>
+            </div>
+            
             <Card className="shadow-soft">
-              <CardHeader>
-                <CardTitle>Recent Applications</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Application management interface coming soon...
-                </p>
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Manage Applications</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Review and manage job applications from candidates
+                  </p>
+                  <Button asChild>
+                    <Link to="/admin/applications">
+                      View Application Dashboard
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

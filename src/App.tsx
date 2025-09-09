@@ -17,6 +17,10 @@ import Register from "./pages/Register";
 import Unauthorized from "./pages/Unauthorized";
 import AdminDashboard from "./pages/admin/Dashboard";
 import JobManagement from "./pages/admin/JobManagement";
+import CreateJob from "./pages/admin/CreateJob";
+import ApplicationManagement from "./pages/admin/ApplicationManagement";
+import JobApplication from "./pages/JobApplication";
+import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +44,26 @@ const App = () => (
               <Route path="/register" element={<Register />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
               
+              {/* User Dashboard */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <UserDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Job Application */}
+              <Route 
+                path="/jobs/:id/apply" 
+                element={
+                  <ProtectedRoute>
+                    <JobApplication />
+                  </ProtectedRoute>
+                } 
+              />
+              
               {/* Admin Routes */}
               <Route 
                 path="/admin" 
@@ -54,6 +78,22 @@ const App = () => (
                 element={
                   <ProtectedRoute requireAdmin>
                     <JobManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/jobs/new" 
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <CreateJob />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/applications" 
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <ApplicationManagement />
                   </ProtectedRoute>
                 } 
               />

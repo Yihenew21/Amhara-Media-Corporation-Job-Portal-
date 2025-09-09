@@ -91,6 +91,12 @@ const Header = () => {
             <div className="w-20 h-8 bg-muted animate-pulse rounded" />
           ) : user ? (
             <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/dashboard">
+                  <User className="mr-2 h-4 w-4" />
+                  Dashboard
+                </Link>
+              </Button>
               <span className="text-sm text-muted-foreground">
                 Welcome, {profile?.first_name || user.email}
               </span>
@@ -188,6 +194,12 @@ const Header = () => {
             <div className="pt-3 border-t space-y-2">
               {user ? (
                 <div className="space-y-2">
+                  <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
+                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                      <User className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </Button>
                   <p className="text-sm text-muted-foreground">
                     Welcome, {profile?.first_name || user.email}
                   </p>
