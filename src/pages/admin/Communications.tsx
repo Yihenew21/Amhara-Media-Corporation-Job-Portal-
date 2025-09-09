@@ -278,7 +278,7 @@ const Communications = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="template">Use Template</Label>
-                      <Select value={emailData.template} onValueChange={handleTemplateSelect}>
+                      <Select value={emailData.template ?? ''} onValueChange={handleTemplateSelect}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a template" />
                         </SelectTrigger>
