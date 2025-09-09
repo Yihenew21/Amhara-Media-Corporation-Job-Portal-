@@ -182,54 +182,46 @@ const Footer = () => {
 
           {/* Newsletter Signup */}
           <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-foreground">Stay Updated</h4>
-            <p className="text-sm text-muted-foreground">
-              Subscribe to our newsletter for the latest job opportunities and company news.
-            </p>
-            <div className="space-y-2">
-              <div className="flex space-x-2">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1"
-                />
-                <Button size="sm" className="px-3">
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                By subscribing, you agree to our Privacy Policy and consent to receive updates.
-              </p>
-            </div>
+            <h4 className="text-sm font-semibold text-foreground">Support</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  to="/help"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Help Center
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/faq"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  FAQ
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/support"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Contact Support
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/feedback"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Feedback
+                </Link>
+              </li>
+            </ul>
 
-            {/* App Download Links */}
-            <div className="space-y-2 pt-4">
-              <h5 className="text-sm font-medium text-foreground">Download Our App</h5>
-              <div className="flex flex-col space-y-2">
-                <Button variant="outline" size="sm" className="justify-start h-auto p-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 w-6 bg-primary rounded flex items-center justify-center">
-                      <span className="text-xs text-white font-bold">A</span>
-                    </div>
-                    <div className="text-left">
-                      <div className="text-xs text-muted-foreground">Get it on</div>
-                      <div className="text-sm font-medium">Google Play</div>
-                    </div>
-                  </div>
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start h-auto p-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 w-6 bg-primary rounded flex items-center justify-center">
-                      <span className="text-xs text-white font-bold">A</span>
-                    </div>
-                    <div className="text-left">
-                      <div className="text-xs text-muted-foreground">Download on the</div>
-                      <div className="text-sm font-medium">App Store</div>
-                    </div>
-                  </div>
-                </Button>
-              </div>
-            </div>
+            <h4 className="text-sm font-semibold text-foreground pt-4">Follow Us</h4>
+            <p className="text-sm text-muted-foreground">
+              Stay connected with us on social media for the latest updates and news.
+            </p>
           </div>
         </div>
       </div>
