@@ -17,6 +17,9 @@ import {
   Calendar,
   MapPin,
   Building,
+  BarChart3,
+  MessageSquare,
+  Settings,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -198,6 +201,8 @@ const AdminDashboard = () => {
           <TabsList>
             <TabsTrigger value="jobs">Job Management</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="communications">Communications</TabsTrigger>
             {isSuperAdmin && <TabsTrigger value="users">User Management</TabsTrigger>}
           </TabsList>
 
@@ -296,16 +301,89 @@ const AdminDashboard = () => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="analytics">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Analytics & Reports</h2>
+              <Button asChild>
+                <Link to="/admin/analytics">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  View Full Analytics
+                </Link>
+              </Button>
+            </div>
+            
+            <Card className="shadow-soft">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Recruitment Analytics</h3>
+                  <p className="text-muted-foreground mb-4">
+                    View comprehensive reports and insights on recruitment performance
+                  </p>
+                  <Button asChild>
+                    <Link to="/admin/analytics">
+                      View Analytics Dashboard
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="communications">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Communications</h2>
+              <Button asChild>
+                <Link to="/admin/communications">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Manage Communications
+                </Link>
+              </Button>
+            </div>
+            
+            <Card className="shadow-soft">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Email & Communications</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Send emails to candidates and manage communication templates
+                  </p>
+                  <Button asChild>
+                    <Link to="/admin/communications">
+                      Open Communications Center
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
           {isSuperAdmin && (
             <TabsContent value="users">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Admin Management</h2>
+                <Button asChild>
+                  <Link to="/admin/users">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Manage Admins
+                  </Link>
+                </Button>
+              </div>
+              
               <Card className="shadow-soft">
-                <CardHeader>
-                  <CardTitle>User Management</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    User management interface coming soon...
-                  </p>
+                <CardContent className="p-6">
+                  <div className="text-center">
+                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Administrator Management</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Add, edit, and manage administrator accounts and permissions
+                    </p>
+                    <Button asChild>
+                      <Link to="/admin/users">
+                        Manage Admin Users
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

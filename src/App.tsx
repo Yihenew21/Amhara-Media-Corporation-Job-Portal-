@@ -19,6 +19,9 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import JobManagement from "./pages/admin/JobManagement";
 import CreateJob from "./pages/admin/CreateJob";
 import ApplicationManagement from "./pages/admin/ApplicationManagement";
+import AdminManagement from "./pages/admin/AdminManagement";
+import Analytics from "./pages/admin/Analytics";
+import Communications from "./pages/admin/Communications";
 import JobApplication from "./pages/JobApplication";
 import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
@@ -94,6 +97,30 @@ const App = () => (
                 element={
                   <ProtectedRoute requireAdmin>
                     <ApplicationManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/users" 
+                element={
+                  <ProtectedRoute requireSuperAdmin>
+                    <AdminManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/analytics" 
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <Analytics />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/communications" 
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <Communications />
                   </ProtectedRoute>
                 } 
               />
