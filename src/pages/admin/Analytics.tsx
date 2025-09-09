@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { useExport } from "@/hooks/useExport";
 import {
   ArrowLeft,
   TrendingUp,
@@ -44,6 +45,7 @@ interface AnalyticsData {
 
 const Analytics = () => {
   const navigate = useNavigate();
+  const { exportAnalyticsReport, exportJobsReport, loading: exportLoading } = useExport();
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     totalJobs: 0,
     activeJobs: 0,
@@ -190,10 +192,33 @@ const Analytics = () => {
                 Comprehensive insights into recruitment performance
               </p>
             </div>
-            <Button variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Export Report
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={exportJobsReport}
+                disabled={exportLoading}
+              >
+                {exportLoading ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export Jobs
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={exportAnalyticsReport}
+                disabled={exportLoading}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Export Analytics
+              </Button>
+            </div>
           </div>
         </div>
 

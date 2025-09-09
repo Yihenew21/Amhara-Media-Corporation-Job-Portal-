@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export interface Job {
   id: string;
@@ -30,6 +31,7 @@ export const useJobs = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { sendApplicationReceivedEmail } = useNotifications();
 
   const fetchJobs = async () => {
     try {
@@ -127,6 +129,30 @@ export const useJobs = () => {
         throw applicationError;
       }
 
+      // Get user profile for email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('user_id', user.id)
+        .single();
+
+      // Get job details for email
+      const { data: job } = await supabase
+        .from('jobs')
+        .select('title')
+        .eq('id', jobId)
+        .single();
+
+      // Send confirmation email
+      if (profile && job) {
+        const candidateName = `${profile.first_name} ${profile.last_name}`;
+        await sendApplicationReceivedEmail(
+          user.email!,
+          candidateName,
+          job.title,
+          jobId
+        );
+      }
       return { success: true };
     } catch (err) {
       console.error('Error applying to job:', err);

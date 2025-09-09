@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useExport } from "@/hooks/useExport";
+import AIAssessmentCard from "@/components/AIAssessmentCard";
 import {
   Search,
   Filter,
@@ -18,6 +21,8 @@ import {
   Briefcase,
   FileText,
   Mail,
+  Brain,
+  Send,
 } from "lucide-react";
 
 interface Application {
@@ -44,11 +49,15 @@ interface Application {
 const ApplicationManagement = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { sendStatusUpdateEmail, loading: emailLoading } = useNotifications();
+  const { exportApplicationsReport, loading: exportLoading } = useExport();
   const [applications, setApplications] = useState<Application[]>([]);
   const [filteredApplications, setFilteredApplications] = useState<Application[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [showAssessment, setShowAssessment] = useState<string | null>(null);
 
   useEffect(() => {
     fetchApplications();
@@ -125,6 +134,9 @@ const ApplicationManagement = () => {
 
   const updateApplicationStatus = async (applicationId: string, newStatus: string) => {
     try {
+      const application = applications.find(app => app.id === applicationId);
+      if (!application) return;
+
       const { error } = await supabase
         .from('applications')
         .update({ status: newStatus })
@@ -132,9 +144,18 @@ const ApplicationManagement = () => {
 
       if (error) throw error;
 
+      // Send status update email
+      const candidateName = `${application.profile.first_name} ${application.profile.last_name}`;
+      await sendStatusUpdateEmail(
+        application.user_email,
+        candidateName,
+        application.job.title,
+        newStatus
+      );
+
       toast({
         title: "Success",
-        description: "Application status updated successfully.",
+        description: "Application status updated and candidate notified via email.",
       });
 
       fetchApplications();
@@ -143,6 +164,22 @@ const ApplicationManagement = () => {
       toast({
         title: "Error",
         description: "Failed to update application status. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportApplications = async () => {
+    const result = await exportApplicationsReport();
+    if (result.success) {
+      toast({
+        title: "Export Successful",
+        description: "Applications report has been downloaded.",
+      });
+    } else {
+      toast({
+        title: "Export Failed",
+        description: result.error || "Failed to export applications.",
         variant: "destructive",
       });
     }
@@ -219,10 +256,27 @@ const ApplicationManagement = () => {
               Back to Dashboard
             </Button>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Application Management</h1>
-          <p className="text-muted-foreground">
-            Review and manage job applications from candidates
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Application Management</h1>
+              <p className="text-muted-foreground">
+                Review and manage job applications from candidates
+              </p>
+            </div>
+            <Button onClick={handleExportApplications} disabled={exportLoading} variant="outline">
+              {exportLoading ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export Report
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -335,6 +389,7 @@ const ApplicationManagement = () => {
                       <Select 
                         value={application.status} 
                         onValueChange={(value) => updateApplicationStatus(application.id, value)}
+                        disabled={emailLoading}
                       >
                         <SelectTrigger className="w-[140px]">
                           <SelectValue />
@@ -347,8 +402,26 @@ const ApplicationManagement = () => {
                           <SelectItem value="rejected">Rejected</SelectItem>
                         </SelectContent>
                       </Select>
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setShowAssessment(showAssessment === application.id ? null : application.id)}
+                      >
+                        <Brain className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
+                  
+                  {/* AI Assessment */}
+                  {showAssessment === application.id && (
+                    <div className="mt-4 pt-4 border-t">
+                      <AIAssessmentCard 
+                        applicationId={application.id}
+                        jobRequirements="React, Node.js, TypeScript, 5+ years experience" // In production, get from job data
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))
