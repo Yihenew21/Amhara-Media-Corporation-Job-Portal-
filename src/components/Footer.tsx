@@ -118,34 +118,40 @@ const Footer = () => {
           </div>
 
           {/* Quick Links */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-foreground">Quick Links</h4>
-            <ul className="space-y-2">
-              {quickLinks.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Quick Links */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-foreground">Quick Links</h4>
+              <ul className="space-y-2">
+                {quickLinks.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-            <h4 className="text-sm font-semibold text-foreground pt-4">Job Categories</h4>
-            <ul className="space-y-2">
-              {jobCategories.map((category) => (
-                <li key={category.name}>
-                  <Link
-                    to={category.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {category.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {/* Job Categories */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-foreground">Job Categories</h4>
+              <ul className="space-y-2">
+                {jobCategories.map((category) => (
+                  <li key={category.name}>
+                    <Link
+                      to={category.href}
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {category.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
 
