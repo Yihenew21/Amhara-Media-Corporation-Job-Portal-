@@ -112,11 +112,6 @@ const Jobs = () => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [salaryRange, setSalaryRange] = useState({ min: "", max: "" });
   const [remoteOnly, setRemoteOnly] = useState(false);
-  const [selectedEmploymentType, setSelectedEmploymentType] = useState("All Types");
-  const [selectedExperienceLevel, setSelectedExperienceLevel] = useState("All Levels");
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [salaryRange, setSalaryRange] = useState({ min: "", max: "" });
-  const [remoteOnly, setRemoteOnly] = useState(false);
   const { jobs, loading, error } = useJobs();
   const [filteredJobs, setFilteredJobs] = useState(jobs);
 
@@ -174,33 +169,7 @@ const Jobs = () => {
         job.description.toLowerCase().includes('remote')
       );
     }
-    // Filter by employment type
-    if (selectedEmploymentType !== "All Types") {
-      filtered = filtered.filter((job) => job.employment_type === selectedEmploymentType);
-    }
 
-    // Filter by experience level
-    if (selectedExperienceLevel !== "All Levels") {
-      filtered = filtered.filter((job) => job.experience_level === selectedExperienceLevel);
-    }
-
-    // Filter by salary range
-    if (salaryRange.min || salaryRange.max) {
-      filtered = filtered.filter((job) => {
-        if (!job.salary_range) return false;
-        // Simple salary range filtering (in production, this would be more sophisticated)
-        const salaryText = job.salary_range.toLowerCase();
-        return salaryText.includes('etb') || salaryText.includes('birr');
-      });
-    }
-
-    // Filter remote jobs
-    if (remoteOnly) {
-      filtered = filtered.filter((job) => 
-        job.location.toLowerCase().includes('remote') || 
-        job.description.toLowerCase().includes('remote')
-      );
-    }
     setFilteredJobs(filtered);
   };
 
@@ -208,10 +177,6 @@ const Jobs = () => {
     setSearchTerm("");
     setSelectedDepartment("All Departments");
     setSelectedLocation("All Locations");
-    setSelectedEmploymentType("All Types");
-    setSelectedExperienceLevel("All Levels");
-    setSalaryRange({ min: "", max: "" });
-    setRemoteOnly(false);
     setSelectedEmploymentType("All Types");
     setSelectedExperienceLevel("All Levels");
     setSalaryRange({ min: "", max: "" });
@@ -314,35 +279,53 @@ const Jobs = () => {
                       <SelectItem value="internship">Internship</SelectItem>
                     </SelectContent>
                   </Select>
-            
-            {/* Advanced Filters Toggle */}
-            <div className="flex items-center justify-between">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              >
-                <SlidersHorizontal className="mr-2 h-4 w-4" />
-                {showAdvancedFilters ? 'Hide' : 'Show'} Advanced Filters
-              </Button>
-            </div>
 
-            {/* Advanced Filters */}
-            {showAdvancedFilters && (
-              <div className="space-y-4 pt-4 border-t">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <Select value={selectedEmploymentType} onValueChange={setSelectedEmploymentType}>
+                  <Select value={selectedExperienceLevel} onValueChange={setSelectedExperienceLevel}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Employment Type" />
+                      <SelectValue placeholder="Experience Level" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="All Types">All Types</SelectItem>
-                      <SelectItem value="full-time">Full Time</SelectItem>
-                      <SelectItem value="part-time">Part Time</SelectItem>
-                      <SelectItem value="contract">Contract</SelectItem>
-                      <SelectItem value="internship">Internship</SelectItem>
+                      <SelectItem value="All Levels">All Levels</SelectItem>
+                      <SelectItem value="entry">Entry Level</SelectItem>
+                      <SelectItem value="mid">Mid Level</SelectItem>
+                      <SelectItem value="senior">Senior Level</SelectItem>
+                      <SelectItem value="executive">Executive</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="remote"
+                      checked={remoteOnly}
+                      onCheckedChange={setRemoteOnly}
+                    />
+                    <label htmlFor="remote" className="text-sm font-medium">
+                      Remote only
+                    </label>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Minimum Salary</label>
+                    <Input
+                      placeholder="e.g. 50000"
+                      value={salaryRange.min}
+                      onChange={(e) => setSalaryRange(prev => ({ ...prev, min: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Maximum Salary</label>
+                    <Input
+                      placeholder="e.g. 100000"
+                      value={salaryRange.max}
+                      onChange={(e) => setSalaryRange(prev => ({ ...prev, max: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row gap-3">
               <Button onClick={handleSearch} className="flex-1 sm:flex-none">
                 <Search className="mr-2 h-4 w-4" />
