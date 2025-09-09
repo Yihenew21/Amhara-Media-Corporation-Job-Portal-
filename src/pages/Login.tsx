@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff, LogIn, ArrowLeft, Briefcase } from "lucide-react";
 
 const Login = () => {
@@ -18,26 +19,39 @@ const Login = () => {
     rememberMe: false,
   });
   const { toast } = useToast();
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate login process
     try {
-      // Add your authentication logic here
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const { error } = await signIn(formData.email, formData.password);
       
-      toast({
-        title: "Login successful!",
-        description: "Welcome back to Amhara Media Corporation Job Portal.",
-      });
-      
-      // Redirect to dashboard or previous page
+      if (error) {
+        toast({
+          title: "Login failed",
+          description: error.message || "Please check your credentials and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login successful!",
+          description: "Welcome back to Amhara Media Corporation Job Portal.",
+        });
+        navigate('/');
+      }
     } catch (error) {
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {

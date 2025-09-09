@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, User, Briefcase, LogIn, UserPlus } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Menu, X, User, Briefcase, LogIn, UserPlus, LogOut } from "lucide-react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, profile, signOut, loading } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
@@ -64,18 +67,41 @@ const Header = () => {
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center space-x-3">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/login">
-              <LogIn className="mr-2 h-4 w-4" />
-              Login
-            </Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link to="/register">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Register
-            </Link>
-          </Button>
+          {loading ? (
+            <div className="w-20 h-8 bg-muted animate-pulse rounded" />
+          ) : user ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Welcome, {profile?.first_name || user.email}
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  signOut();
+                  navigate('/');
+                }}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login
+                </Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link to="/register">
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Register
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -122,18 +148,41 @@ const Header = () => {
               Contact
             </Link>
             <div className="pt-3 border-t space-y-2">
-              <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
-                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Login
-                </Link>
-              </Button>
-              <Button size="sm" className="w-full" asChild>
-                <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Register
-                </Link>
-              </Button>
+              {user ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Welcome, {profile?.first_name || user.email}
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full justify-start"
+                    onClick={() => {
+                      signOut();
+                      navigate('/');
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
+                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Login
+                    </Link>
+                  </Button>
+                  <Button size="sm" className="w-full" asChild>
+                    <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Register
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </nav>
         </div>

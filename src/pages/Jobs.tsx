@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, MapPin, Building, Calendar } from "lucide-react";
+import { Search, Filter, MapPin, Building, Calendar, Briefcase } from "lucide-react";
 import JobCard from "@/components/JobCard";
+import { useJobs } from "@/hooks/useJobs";
 
 // Mock job data
 const allJobs = [
@@ -104,10 +105,15 @@ const Jobs = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("All Departments");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
-  const [filteredJobs, setFilteredJobs] = useState(allJobs);
+  const { jobs, loading, error } = useJobs();
+  const [filteredJobs, setFilteredJobs] = useState(jobs);
+
+  useEffect(() => {
+    setFilteredJobs(jobs);
+  }, [jobs]);
 
   const handleSearch = () => {
-    let filtered = allJobs;
+    let filtered = jobs;
 
     // Filter by search term
     if (searchTerm) {
@@ -115,9 +121,7 @@ const Jobs = () => {
         (job) =>
           job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.requirements.some((req) =>
-            req.toLowerCase().includes(searchTerm.toLowerCase())
-          )
+          job.requirements.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -138,7 +142,7 @@ const Jobs = () => {
     setSearchTerm("");
     setSelectedDepartment("All Departments");
     setSelectedLocation("All Locations");
-    setFilteredJobs(allJobs);
+    setFilteredJobs(jobs);
   };
 
   return (
@@ -182,7 +186,8 @@ const Jobs = () => {
                     <SelectValue placeholder="Department" />
                   </SelectTrigger>
                   <SelectContent>
-                    {departments.map((dept) => (
+                    <SelectItem value="All Departments">All Departments</SelectItem>
+                    {[...new Set(jobs.map(job => job.department))].map((dept) => (
                       <SelectItem key={dept} value={dept}>
                         {dept}
                       </SelectItem>
@@ -196,7 +201,8 @@ const Jobs = () => {
                     <SelectValue placeholder="Location" />
                   </SelectTrigger>
                   <SelectContent>
-                    {locations.map((location) => (
+                    <SelectItem value="All Locations">All Locations</SelectItem>
+                    {[...new Set(jobs.map(job => job.location))].map((location) => (
                       <SelectItem key={location} value={location}>
                         {location}
                       </SelectItem>
@@ -221,7 +227,7 @@ const Jobs = () => {
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <h2 className="text-xl font-semibold">
-              {filteredJobs.length === allJobs.length 
+              {loading ? "Loading..." : filteredJobs.length === jobs.length 
                 ? `All Jobs (${filteredJobs.length})`
                 : `Search Results (${filteredJobs.length})`
               }
@@ -234,7 +240,35 @@ const Jobs = () => {
         </div>
 
         {/* Jobs Grid */}
-        {filteredJobs.length === 0 ? (
+        {loading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="shadow-soft">
+                <CardContent className="p-6">
+                  <div className="space-y-3">
+                    <div className="h-6 bg-muted animate-pulse rounded" />
+                    <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+                    <div className="flex gap-2">
+                      <div className="h-6 bg-muted animate-pulse rounded w-20" />
+                      <div className="h-6 bg-muted animate-pulse rounded w-20" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : error ? (
+          <Card className="text-center py-12 shadow-soft">
+            <CardContent>
+              <div className="mx-auto mb-4 h-12 w-12 rounded-lg bg-destructive/10 flex items-center justify-center">
+                <Briefcase className="h-6 w-6 text-destructive" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Error loading jobs</h3>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()}>Try Again</Button>
+            </CardContent>
+          </Card>
+        ) : filteredJobs.length === 0 ? (
           <Card className="text-center py-12 shadow-soft">
             <CardContent>
               <div className="mx-auto mb-4 h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
@@ -250,7 +284,16 @@ const Jobs = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredJobs.map((job) => (
-              <JobCard key={job.id} {...job} />
+              <JobCard 
+                key={job.id}
+                id={job.id}
+                title={job.title}
+                department={job.department}
+                location={job.location}
+                postedDate={job.posted_date}
+                description={job.description}
+                requirements={job.requirements.split('\n').filter(Boolean)}
+              />
             ))}
           </div>
         )}

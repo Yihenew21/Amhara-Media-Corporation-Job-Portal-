@@ -1,8 +1,15 @@
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useJobs, Job } from "@/hooks/useJobs";
 import {
   ArrowLeft,
   MapPin,
@@ -13,6 +20,10 @@ import {
   CheckCircle,
   Share2,
   BookmarkPlus,
+  Upload,
+  FileText,
+  DollarSign,
+  Briefcase,
 } from "lucide-react";
 
 // Mock job data - In real app, this would come from your backend
@@ -65,6 +76,107 @@ Key responsibilities include architecting and implementing new features, optimiz
 
 const JobDetail = () => {
   const { id } = useParams();
+  const [job, setJob] = useState<Job | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [coverLetter, setCoverLetter] = useState("");
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { user } = useAuth();
+  const { getJobById, applyToJob, hasUserApplied } = useJobs();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchJob = async () => {
+      if (!id) return;
+      
+      setLoading(true);
+      const jobData = await getJobById(id);
+      setJob(jobData);
+      
+      if (jobData && user) {
+        const applied = await hasUserApplied(id);
+        setHasApplied(applied);
+      }
+      
+      setLoading(false);
+    };
+
+    fetchJob();
+  }, [id, getJobById, hasUserApplied, user]);
+
+  const handleApply = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    setShowApplicationModal(true);
+  };
+
+  const handleSubmitApplication = async () => {
+    if (!job || !cvFile) return;
+
+    setIsSubmitting(true);
+    
+    try {
+      const result = await applyToJob(job.id, coverLetter, cvFile);
+      
+      if (result.success) {
+        toast({
+          title: "Application submitted successfully!",
+          description: "We'll review your application and get back to you soon.",
+        });
+        setShowApplicationModal(false);
+        setHasApplied(true);
+      } else {
+        toast({
+          title: "Application failed",
+          description: result.error || "Failed to submit application. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Application failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type and size
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload a PDF or Word document.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (file.size > maxSize) {
+        toast({
+          title: "File too large",
+          description: "Please upload a file smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setCvFile(file);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {

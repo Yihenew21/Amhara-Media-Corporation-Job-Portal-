@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff, UserPlus, ArrowLeft, Briefcase, Phone, User } from "lucide-react";
 
 const Register = () => {
@@ -23,6 +24,14 @@ const Register = () => {
     agreeToTerms: false,
   });
   const { toast } = useToast();
+  const { signUp, user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,21 +58,31 @@ const Register = () => {
       return;
     }
 
-    // Simulate registration process
     try {
-      // Add your registration logic here
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const { error } = await signUp(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName
+      );
       
-      toast({
-        title: "Registration successful!",
-        description: "Your account has been created. Please check your email for verification.",
-      });
-      
-      // Redirect to login or dashboard
+      if (error) {
+        toast({
+          title: "Registration failed",
+          description: error.message || "An error occurred during registration. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Registration successful!",
+          description: "Welcome to Amhara Media Corporation Job Portal. Please check your email to verify your account.",
+        });
+        navigate('/login');
+      }
     } catch (error) {
       toast({
         title: "Registration failed",
-        description: "Please try again later.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
