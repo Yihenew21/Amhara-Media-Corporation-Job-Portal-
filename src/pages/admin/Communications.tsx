@@ -49,6 +49,9 @@ const Communications = () => {
   const [loading, setLoading] = useState(false);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   
+  // Bulk actions state
+  const [selectedBulkJob, setSelectedBulkJob] = useState("");
+  
   // Email composition state
   const [emailData, setEmailData] = useState({
     recipients: "",
@@ -504,7 +507,7 @@ const Communications = () => {
                       Send an email to all applicants for a specific job posting.
                     </p>
                     <div className="flex gap-2">
-                      <Select>
+                      <Select value={selectedBulkJob} onValueChange={setSelectedBulkJob}>
                         <SelectTrigger className="w-[200px]">
                           <SelectValue placeholder="Select job" />
                         </SelectTrigger>
