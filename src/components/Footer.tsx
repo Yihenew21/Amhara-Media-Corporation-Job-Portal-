@@ -59,7 +59,7 @@ const Footer = () => {
     <footer className="bg-muted/30 border-t">
       {/* Main Footer Content */}
       <div className="container py-12">
-        <div className="grid gap-8 lg:grid-cols-4 md:grid-cols-2">
+        <div className="grid gap-8 lg:grid-cols-3 md:grid-cols-2">
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
@@ -148,80 +148,37 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Resources */}
+
+
+
+          {/* Follow Us */}
           <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-foreground">Resources</h4>
-            <ul className="space-y-2">
-              {resources.map((resource) => (
-                <li key={resource.name}>
-                  <Link
-                    to={resource.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center"
-                  >
-                    {resource.name}
-                    <ExternalLink className="ml-1 h-3 w-3" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            <h4 className="text-sm font-semibold text-foreground pt-4">Legal</h4>
-            <ul className="space-y-2">
-              {legalLinks.map((legal) => (
-                <li key={legal.name}>
-                  <Link
-                    to={legal.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {legal.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Newsletter Signup */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-foreground">Support</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  to="/help"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Help Center
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/faq"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/support"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Contact Support
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/feedback"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Feedback
-                </Link>
-              </li>
-            </ul>
-
             <h4 className="text-sm font-semibold text-foreground pt-4">Follow Us</h4>
             <p className="text-sm text-muted-foreground">
               Stay connected with us on social media for the latest updates and news.
             </p>
+            
+            {/* Social Links */}
+            <div className="flex space-x-2">
+              {socialLinks.map((social) => (
+                <Button
+                  key={social.name}
+                  variant="outline"
+                  size="sm"
+                  className="h-9 w-9 p-0"
+                  asChild
+                >
+                  <a
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.name}
+                  >
+                    <social.icon className="h-4 w-4" />
+                  </a>
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -243,12 +200,9 @@ const Footer = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/sitemap">Sitemap</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/help">Help Center</Link>
-            </Button>
+            <p className="text-xs text-muted-foreground">
+              Built with modern technology
+            </p>
           </div>
         </div>
       </div>
