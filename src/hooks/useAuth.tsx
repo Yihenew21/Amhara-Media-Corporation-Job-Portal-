@@ -11,6 +11,8 @@ interface Profile {
   location: string | null;
   bio: string | null;
   avatar_url: string | null;
+  role: 'job_seeker' | 'hr_admin' | 'super_admin';
+  is_admin: boolean;
 }
 
 interface AuthContextType {
@@ -18,6 +20,8 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -28,6 +32,8 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   profile: null,
   loading: true,
+  isAdmin: false,
+  isSuperAdmin: false,
   signUp: async () => ({ error: null }),
   signIn: async () => ({ error: null }),
   signOut: async () => {},
@@ -49,14 +55,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
 
-      if (!error && data) {
-        setProfile(data);
+      if (!profileError && profileData) {
+        // Check if user is admin
+        const { data: adminData } = await supabase
+          .from('admin_users')
+          .select('role')
+          .eq('user_id', userId)
+          .single();
+
+        const enhancedProfile = {
+          ...profileData,
+          role: adminData?.role ? (adminData.role as 'hr_admin' | 'super_admin') : 'job_seeker' as const,
+          is_admin: !!adminData
+        };
+
+        setProfile(enhancedProfile);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -128,11 +147,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setProfile(null);
   };
 
+  const isAdmin = profile?.is_admin || false;
+  const isSuperAdmin = profile?.role === 'super_admin';
+
   const value = {
     user,
     session,
     profile,
     loading,
+    isAdmin,
+    isSuperAdmin,
     signUp,
     signIn,
     signOut,

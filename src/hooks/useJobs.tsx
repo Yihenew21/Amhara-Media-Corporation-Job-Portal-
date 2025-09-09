@@ -75,7 +75,7 @@ export const useJobs = () => {
   const applyToJob = async (
     jobId: string, 
     coverLetter: string, 
-    cvFile: File
+    cvFile?: File
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -84,14 +84,20 @@ export const useJobs = () => {
         return { success: false, error: 'You must be logged in to apply' };
       }
 
-      // Upload CV file
-      const fileName = `${user.id}/${Date.now()}-${cvFile.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('cvs')
-        .upload(fileName, cvFile);
+      let fileName = null;
+      let cvFileName = null;
 
-      if (uploadError) {
-        throw uploadError;
+      // Upload CV file if provided
+      if (cvFile) {
+        fileName = `${user.id}/${Date.now()}-${cvFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('cvs')
+          .upload(fileName, cvFile);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+        cvFileName = cvFile.name;
       }
 
       // Create application record
@@ -101,13 +107,15 @@ export const useJobs = () => {
           user_id: user.id,
           job_id: jobId,
           cover_letter: coverLetter,
-          cv_file_name: cvFile.name,
+          cv_file_name: cvFileName,
           cv_file_path: fileName,
         });
 
       if (applicationError) {
         // Clean up uploaded file if application creation fails
-        await supabase.storage.from('cvs').remove([fileName]);
+        if (fileName) {
+          await supabase.storage.from('cvs').remove([fileName]);
+        }
         throw applicationError;
       }
 

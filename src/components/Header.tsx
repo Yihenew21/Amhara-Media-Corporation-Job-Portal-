@@ -7,7 +7,7 @@ import { Menu, X, User, Briefcase, LogIn, UserPlus, LogOut } from "lucide-react"
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, profile, signOut, loading } = useAuth();
+  const { user, profile, signOut, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -47,6 +47,16 @@ const Header = () => {
           >
             Jobs
           </Link>
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                isActive("/admin") ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              Admin Dashboard
+            </Link>
+          )}
           <Link
             to="/about"
             className={`text-sm font-medium transition-colors hover:text-primary ${
@@ -133,6 +143,15 @@ const Header = () => {
             >
               Jobs
             </Link>
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="block text-sm font-medium text-muted-foreground hover:text-primary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Admin Dashboard
+              </Link>
+            )}
             <Link
               to="/about"
               className="block text-sm font-medium text-muted-foreground hover:text-primary"
