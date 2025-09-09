@@ -277,6 +277,10 @@ const Jobs = () => {
                       <SelectItem value="internship">Internship</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+            )}
+            
             <div className="flex flex-col sm:flex-row gap-3">
               <Button onClick={handleSearch} className="flex-1 sm:flex-none">
                 <Search className="mr-2 h-4 w-4" />
