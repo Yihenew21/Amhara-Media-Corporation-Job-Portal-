@@ -13,6 +13,8 @@ interface Profile {
   avatar_url: string | null;
   role: 'job_seeker' | 'hr_admin' | 'super_admin';
   is_admin: boolean;
+  role: 'job_seeker' | 'hr_admin' | 'super_admin';
+  is_admin: boolean;
 }
 
 interface AuthContextType {
@@ -20,6 +22,8 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: any }>;
@@ -32,6 +36,8 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   profile: null,
   loading: true,
+  isAdmin: false,
+  isSuperAdmin: false,
   isAdmin: false,
   isSuperAdmin: false,
   signUp: async () => ({ error: null }),
@@ -63,6 +69,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!profileError && profileData) {
         // Check if user is admin
+        const { data: adminData } = await supabase
+          .from('admin_users')
+          .select('role')
+          .eq('user_id', userId)
+          .single();
+
+        const enhancedProfile = {
+          ...profileData,
+          role: adminData?.role ? (adminData.role as 'hr_admin' | 'super_admin') : 'job_seeker' as const,
+          is_admin: !!adminData
+        };
+
+        setProfile(enhancedProfile);
         const { data: adminData } = await supabase
           .from('admin_users')
           .select('role')
@@ -150,11 +169,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const isAdmin = profile?.is_admin || false;
   const isSuperAdmin = profile?.role === 'super_admin';
 
+  const isAdmin = profile?.is_admin || false;
+  const isSuperAdmin = profile?.role === 'super_admin';
+
   const value = {
     user,
     session,
     profile,
     loading,
+    isAdmin,
+    isSuperAdmin,
     isAdmin,
     isSuperAdmin,
     signUp,
