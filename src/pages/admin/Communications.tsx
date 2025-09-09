@@ -315,7 +315,7 @@ const Communications = () => {
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                      Use {"{{"}candidateName{"}}"}, {"{{"}jobTitle{"}}"}, etc. for dynamic content
+                      Use placeholders like candidateName, jobTitle, etc. for dynamic content
                     </p>
                   </div>
 

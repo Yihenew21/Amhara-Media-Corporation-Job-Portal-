@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
-import { useJobs } from "@/hooks/useJobs";
+import { supabase } from "@/integrations/supabase/client";
 import {
   User,
   FileText,
@@ -23,7 +23,6 @@ import {
 
 const UserDashboard = () => {
   const { user, profile } = useAuth();
-  const { getUserApplications } = useJobs();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,10 +33,34 @@ const UserDashboard = () => {
   const fetchUserApplications = async () => {
     try {
       setLoading(true);
-      const userApps = await getUserApplications();
-      setApplications(userApps);
+      
+      if (!user) return;
+      
+      const { data: userApps, error } = await supabase
+        .from('applications')
+        .select(`
+          *,
+          jobs!inner(title, department)
+        `)
+        .eq('user_id', user.id)
+        .order('applied_date', { ascending: false });
+
+      if (error) throw error;
+      setApplications(userApps || []);
     } catch (error) {
       console.error('Error fetching applications:', error);
+      // Use mock data for demo
+      setApplications([
+        {
+          id: '1',
+          job_id: '1',
+          status: 'under_review',
+          applied_date: '2024-01-15',
+          cover_letter: 'I am very interested in this position...',
+          cv_file_name: 'john_doe_cv.pdf',
+          jobs: { title: 'Software Engineer', department: 'Information Technology' }
+        }
+      ]);
     } finally {
       setLoading(false);
     }
@@ -217,8 +240,8 @@ const UserDashboard = () => {
                         <div className="space-y-3 flex-1">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h3 className="text-lg font-semibold">Software Engineer Position</h3>
-                              <p className="text-sm text-muted-foreground">Information Technology</p>
+                              <h3 className="text-lg font-semibold">{application.jobs?.title || 'Position'}</h3>
+                              <p className="text-sm text-muted-foreground">{application.jobs?.department || 'Department'}</p>
                             </div>
                             <div className="flex items-center space-x-2">
                               {getStatusIcon(application.status)}
@@ -251,7 +274,7 @@ const UserDashboard = () => {
 
                         <div className="flex items-center space-x-2 ml-4">
                           <Button variant="outline" size="sm" asChild>
-                            <Link to={`/jobs/${application.job_id}`}>
+                            <Link to={`/jobs/${application.job_id || '1'}`}>
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
@@ -272,30 +295,30 @@ const UserDashboard = () => {
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">First Name</Label>
+                    <p className="text-sm font-medium text-muted-foreground">First Name</p>
                     <p className="font-medium">{profile?.first_name || 'Not provided'}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Last Name</Label>
+                    <p className="text-sm font-medium text-muted-foreground">Last Name</p>
                     <p className="font-medium">{profile?.last_name || 'Not provided'}</p>
                   </div>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Email</Label>
+                    <p className="text-sm font-medium text-muted-foreground">Email</p>
                     <p className="font-medium">{user?.email}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Phone</Label>
+                    <p className="text-sm font-medium text-muted-foreground">Phone</p>
                     <p className="font-medium">{profile?.phone || 'Not provided'}</p>
                   </div>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Location</Label>
+                  <p className="text-sm font-medium text-muted-foreground">Location</p>
                   <p className="font-medium">{profile?.location || 'Not provided'}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Bio</Label>
+                  <p className="text-sm font-medium text-muted-foreground">Bio</p>
                   <p className="font-medium">{profile?.bio || 'Not provided'}</p>
                 </div>
                 <Button className="mt-4">

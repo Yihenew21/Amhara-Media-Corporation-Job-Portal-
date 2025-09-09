@@ -10,10 +10,10 @@ interface JobCardProps {
   department: string;
   location: string;
   postedDate: string;
-  expiryDate: string;
   description: string;
   requirements: string[];
-  isActive: boolean;
+  expiryDate?: string;
+  isActive?: boolean;
 }
 
 const JobCard = ({
@@ -22,10 +22,10 @@ const JobCard = ({
   department,
   location,
   postedDate,
-  expiryDate,
   description,
   requirements,
-  isActive,
+  expiryDate = "2024-12-31",
+  isActive = true,
 }: JobCardProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {

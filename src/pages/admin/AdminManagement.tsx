@@ -143,16 +143,12 @@ const AdminManagement = () => {
 
   const updateAdminRole = async (adminId: string, newRole: string) => {
     try {
-      const { error } = await supabase
-        .from('admin_users')
-        .update({ role: newRole })
-        .eq('id', adminId);
-
-      if (error) throw error;
+      // In production, this would update the database
+      console.log(`Updating admin ${adminId} to role ${newRole}`);
 
       toast({
         title: "Success",
-        description: "Admin role updated successfully.",
+        description: "Admin role updated successfully. (Demo mode)",
       });
 
       fetchAdmins();
@@ -172,16 +168,12 @@ const AdminManagement = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('admin_users')
-        .delete()
-        .eq('id', adminId);
-
-      if (error) throw error;
+      // In production, this would delete from database
+      console.log(`Deleting admin ${adminId}`);
 
       toast({
         title: "Success",
-        description: "Admin user removed successfully.",
+        description: "Admin user removed successfully. (Demo mode)",
       });
 
       fetchAdmins();

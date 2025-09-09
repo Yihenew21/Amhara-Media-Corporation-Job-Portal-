@@ -202,5 +202,6 @@ export const useJobs = () => {
     getJobById,
     applyToJob,
     hasUserApplied,
+    getUserApplications,
   };
 };

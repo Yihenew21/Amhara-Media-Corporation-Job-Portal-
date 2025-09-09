@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -22,8 +21,6 @@ const Jobs = () => {
   const [selectedEmploymentType, setSelectedEmploymentType] = useState("All Types");
   const [selectedExperienceLevel, setSelectedExperienceLevel] = useState("All Levels");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [salaryRange, setSalaryRange] = useState({ min: "", max: "" });
-  const [remoteOnly, setRemoteOnly] = useState(false);
   const { jobs, loading, error } = useJobs();
   const [filteredJobs, setFilteredJobs] = useState(jobs);
 
@@ -63,24 +60,7 @@ const Jobs = () => {
     if (selectedExperienceLevel !== "All Levels") {
       filtered = filtered.filter((job) => job.experience_level === selectedExperienceLevel);
     }
-
-    // Filter by salary range
-    if (salaryRange.min || salaryRange.max) {
-      filtered = filtered.filter((job) => {
-        if (!job.salary_range) return false;
-        // Simple salary range filtering (in production, this would be more sophisticated)
-        const salaryText = job.salary_range.toLowerCase();
-        return salaryText.includes('etb') || salaryText.includes('birr');
-      });
-    }
-
-    // Filter remote jobs
-    if (remoteOnly) {
-      filtered = filtered.filter((job) => 
-        job.location.toLowerCase().includes('remote') || 
-        job.description.toLowerCase().includes('remote')
-      );
-    }
+    
     setFilteredJobs(filtered);
   };
 
@@ -90,8 +70,6 @@ const Jobs = () => {
     setSelectedLocation("All Locations");
     setSelectedEmploymentType("All Types");
     setSelectedExperienceLevel("All Levels");
-    setSalaryRange({ min: "", max: "" });
-    setRemoteOnly(false);
     setFilteredJobs(jobs);
   };
 
