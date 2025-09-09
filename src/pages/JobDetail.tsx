@@ -26,54 +26,6 @@ import {
   Briefcase,
 } from "lucide-react";
 
-// Mock job data - In real app, this would come from your backend
-const jobData = {
-  id: "1",
-  title: "Senior Software Engineer",
-  department: "Information Technology",
-  location: "Addis Ababa, Ethiopia",
-  postedDate: "2024-01-15",
-  expiryDate: "2024-02-15",
-  description: `We are looking for an experienced software engineer to join our growing tech team. You will be responsible for developing and maintaining our digital platforms, working with modern technologies like React, Node.js, and cloud services.
-
-As a Senior Software Engineer at Amhara Media Corporation, you will play a crucial role in building scalable web applications that serve millions of users across Ethiopia and beyond. You'll work closely with cross-functional teams including designers, product managers, and other engineers to deliver high-quality software solutions.
-
-Key responsibilities include architecting and implementing new features, optimizing application performance, mentoring junior developers, and ensuring code quality through reviews and testing. You'll also have the opportunity to influence technical decisions and contribute to our engineering culture.`,
-  requirements: [
-    "Bachelor's degree in Computer Science or related field",
-    "5+ years of experience in software development",
-    "Proficiency in React, Node.js, and TypeScript",
-    "Experience with cloud platforms (AWS, Azure, or GCP)",
-    "Strong understanding of database design and optimization",
-    "Experience with Docker and containerization",
-    "Knowledge of CI/CD pipelines and DevOps practices",
-    "Excellent problem-solving and communication skills",
-    "Experience with agile development methodologies",
-    "Understanding of software security best practices"
-  ],
-  responsibilities: [
-    "Design and develop scalable web applications using modern technologies",
-    "Collaborate with product teams to translate requirements into technical solutions",
-    "Write clean, maintainable, and well-documented code",
-    "Participate in code reviews and ensure quality standards",
-    "Mentor junior developers and provide technical guidance",
-    "Optimize application performance and scalability",
-    "Stay up-to-date with emerging technologies and industry trends",
-    "Participate in architectural decisions and technical planning"
-  ],
-  benefits: [
-    "Competitive salary and performance bonuses",
-    "Health insurance for employee and family",
-    "Professional development opportunities",
-    "Flexible working hours and remote work options",
-    "Modern office environment with latest technology",
-    "Annual leave and sick leave benefits",
-    "Transportation allowance",
-    "Career advancement opportunities"
-  ],
-  isActive: true,
-};
-
 const JobDetail = () => {
   const { id } = useParams();
   const [job, setJob] = useState<Job | null>(null);
@@ -187,14 +139,55 @@ const JobDetail = () => {
   };
 
   const isExpired = () => {
-    return new Date(jobData.expiryDate) < new Date();
+    if (!job) return false;
+    return new Date(job.expiry_date) < new Date();
   };
 
   const daysUntilExpiry = () => {
-    const expiryTime = new Date(jobData.expiryDate).getTime();
+    if (!job) return 0;
+    const expiryTime = new Date(job.expiry_date).getTime();
     const now = new Date().getTime();
     return Math.ceil((expiryTime - now) / (1000 * 60 * 60 * 24));
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="container max-w-4xl">
+          <div className="animate-pulse space-y-8">
+            <div className="h-8 bg-muted rounded w-32" />
+            <div className="h-64 bg-muted rounded" />
+            <div className="grid gap-8 lg:grid-cols-3">
+              <div className="lg:col-span-2 space-y-8">
+                <div className="h-48 bg-muted rounded" />
+                <div className="h-48 bg-muted rounded" />
+              </div>
+              <div className="space-y-6">
+                <div className="h-32 bg-muted rounded" />
+                <div className="h-32 bg-muted rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="container max-w-4xl">
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-bold mb-4">Job Not Found</h1>
+            <p className="text-muted-foreground mb-4">The job you're looking for doesn't exist or has been removed.</p>
+            <Button asChild>
+              <Link to="/jobs">Back to Jobs</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8">
@@ -214,19 +207,19 @@ const JobDetail = () => {
           <CardHeader className="pb-6">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
               <div className="flex-1">
-                <h1 className="text-3xl font-bold mb-3">{jobData.title}</h1>
+                <h1 className="text-3xl font-bold mb-3">{job.title}</h1>
                 <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-4">
                   <div className="flex items-center">
                     <Building className="mr-2 h-4 w-4" />
-                    {jobData.department}
+                    {job.department}
                   </div>
                   <div className="flex items-center">
                     <MapPin className="mr-2 h-4 w-4" />
-                    {jobData.location}
+                    {job.location}
                   </div>
                   <div className="flex items-center">
                     <Calendar className="mr-2 h-4 w-4" />
-                    Posted {formatDate(jobData.postedDate)}
+                    Posted {formatDate(job.posted_date)}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -286,7 +279,7 @@ const JobDetail = () => {
               </CardHeader>
               <CardContent>
                 <div className="prose prose-gray max-w-none">
-                  {jobData.description.split('\n\n').map((paragraph, index) => (
+                  {job.description.split('\n\n').map((paragraph, index) => (
                     <p key={index} className="mb-4 text-muted-foreground leading-relaxed">
                       {paragraph}
                     </p>
@@ -296,21 +289,23 @@ const JobDetail = () => {
             </Card>
 
             {/* Key Responsibilities */}
-            <Card className="shadow-soft">
-              <CardHeader>
-                <CardTitle>Key Responsibilities</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {jobData.responsibilities.map((responsibility, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle className="mr-3 h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-muted-foreground">{responsibility}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+            {job.responsibilities && (
+              <Card className="shadow-soft">
+                <CardHeader>
+                  <CardTitle>Key Responsibilities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    {job.responsibilities.split('\n').filter(Boolean).map((responsibility, index) => (
+                      <li key={index} className="flex items-start">
+                        <CheckCircle className="mr-3 h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <span className="text-muted-foreground">{responsibility}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Requirements */}
             <Card className="shadow-soft">
@@ -319,7 +314,7 @@ const JobDetail = () => {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {jobData.requirements.map((requirement, index) => (
+                  {job.requirements.split('\n').filter(Boolean).map((requirement, index) => (
                     <li key={index} className="flex items-start">
                       <CheckCircle className="mr-3 h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                       <span className="text-muted-foreground">{requirement}</span>
@@ -345,28 +340,30 @@ const JobDetail = () => {
                     </Link>
                   </Button>
                   <p className="text-sm text-muted-foreground text-center">
-                    Application deadline: {formatDate(jobData.expiryDate)}
+                    Application deadline: {formatDate(job.expiry_date)}
                   </p>
                 </CardContent>
               </Card>
             )}
 
             {/* Benefits */}
-            <Card className="shadow-soft">
-              <CardHeader>
-                <CardTitle className="text-lg">Benefits & Perks</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {jobData.benefits.map((benefit, index) => (
-                    <li key={index} className="flex items-start text-sm">
-                      <CheckCircle className="mr-2 h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                      <span className="text-muted-foreground">{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+            {job.benefits && (
+              <Card className="shadow-soft">
+                <CardHeader>
+                  <CardTitle className="text-lg">Benefits & Perks</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {job.benefits.split('\n').filter(Boolean).map((benefit, index) => (
+                      <li key={index} className="flex items-start text-sm">
+                        <CheckCircle className="mr-2 h-4 w-4 text-success mt-0.5 flex-shrink-0" />
+                        <span className="text-muted-foreground">{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Company Info */}
             <Card className="shadow-soft">

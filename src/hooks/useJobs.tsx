@@ -1,419 +1,206 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Search, Filter, MapPin, Building, Calendar, Briefcase, SlidersHorizontal } from "lucide-react";
-import JobCard from "@/components/JobCard";
-import { useJobs } from "@/hooks/useJobs";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
-// Mock job data
-const allJobs = [
-  {
-    id: "1",
-    title: "Senior Software Engineer",
-    department: "Information Technology",
-    location: "Addis Ababa, Ethiopia",
-    postedDate: "2024-01-15",
-    expiryDate: "2024-02-15",
-    description: "We are looking for an experienced software engineer to join our growing tech team. You will be responsible for developing and maintaining our digital platforms, working with modern technologies like React, Node.js, and cloud services.",
-    requirements: ["React", "Node.js", "5+ years experience", "TypeScript", "AWS", "Docker"],
-    isActive: true,
-  },
-  {
-    id: "2",
-    title: "Content Producer",
-    department: "Media Production",
-    location: "Bahir Dar, Ethiopia",
-    postedDate: "2024-01-20",
-    expiryDate: "2024-02-20",
-    description: "Join our creative team as a content producer. You will work on various media projects including documentaries, news segments, and digital content creation for our multiple platforms.",
-    requirements: ["Video Production", "Adobe Creative Suite", "Storytelling", "3+ years experience", "Broadcasting"],
-    isActive: true,
-  },
-  {
-    id: "3",
-    title: "Marketing Specialist",
-    department: "Marketing & Communications",
-    location: "Addis Ababa, Ethiopia",
-    postedDate: "2024-01-18",
-    expiryDate: "2024-02-18",
-    description: "We're seeking a dynamic marketing specialist to develop and execute marketing campaigns that enhance our brand presence across various channels including digital, print, and broadcast media.",
-    requirements: ["Digital Marketing", "Social Media", "Analytics", "Communication Skills", "Campaign Management"],
-    isActive: true,
-  },
-  {
-    id: "4",
-    title: "Broadcast Journalist",
-    department: "News & Current Affairs",
-    location: "Gondar, Ethiopia",
-    postedDate: "2024-01-22",
-    expiryDate: "2024-02-22",
-    description: "We are looking for a talented broadcast journalist to join our news team. You will research, write, and present news stories for television and radio broadcasts.",
-    requirements: ["Journalism Degree", "Broadcasting Experience", "Research Skills", "Communication", "Ethics"],
-    isActive: true,
-  },
-  {
-    id: "5",
-    title: "Graphic Designer",
-    department: "Creative Services",
-    location: "Addis Ababa, Ethiopia",
-    postedDate: "2024-01-25",
-    expiryDate: "2024-02-25",
-    description: "Join our creative team as a graphic designer. You will create visual content for various media including print, digital, and broadcast platforms.",
-    requirements: ["Adobe Creative Suite", "Typography", "Brand Design", "2+ years experience", "Portfolio"],
-    isActive: true,
-  },
-  {
-    id: "6",
-    title: "HR Coordinator",
-    department: "Human Resources",
-    location: "Addis Ababa, Ethiopia",
-    postedDate: "2024-01-12",
-    expiryDate: "2024-02-12",
-    description: "We are seeking an HR coordinator to support our human resources team in recruitment, employee relations, and administrative tasks.",
-    requirements: ["HR Experience", "Communication Skills", "Organizational Skills", "MS Office", "Problem Solving"],
-    isActive: true,
-  },
-];
+export interface Job {
+  id: string;
+  title: string;
+  department: string;
+  location: string;
+  posted_date: string;
+  expiry_date: string;
+  description: string;
+  requirements: string;
+  employment_type?: string;
+  experience_level?: string;
+  salary_range?: string;
+  responsibilities?: string;
+  benefits?: string;
+  is_active: boolean;
+}
 
-const departments = [
-  "All Departments",
-  "Information Technology",
-  "Media Production",
-  "Marketing & Communications",
-  "News & Current Affairs",
-  "Creative Services",
-  "Human Resources",
-];
+export interface JobApplication {
+  id: string;
+  job_id: string;
+  user_id: string;
+  cover_letter: string;
+  cv_file_path: string;
+  status: 'pending' | 'reviewing' | 'interview' | 'rejected' | 'hired';
+  applied_at: string;
+}
 
-const locations = [
-  "All Locations",
-  "Addis Ababa, Ethiopia",
-  "Bahir Dar, Ethiopia",
-  "Gondar, Ethiopia",
-];
+export const useJobs = () => {
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const Jobs = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState("All Departments");
-  const [selectedLocation, setSelectedLocation] = useState("All Locations");
-  const [selectedEmploymentType, setSelectedEmploymentType] = useState("All Types");
-  const [selectedExperienceLevel, setSelectedExperienceLevel] = useState("All Levels");
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [salaryRange, setSalaryRange] = useState({ min: "", max: "" });
-  const [remoteOnly, setRemoteOnly] = useState(false);
-  const { jobs, loading, error } = useJobs();
-  const [filteredJobs, setFilteredJobs] = useState(jobs);
+  // Mock data for development
+  const mockJobs: Job[] = [
+    {
+      id: "1",
+      title: "Senior Software Engineer",
+      department: "Information Technology",
+      location: "Addis Ababa, Ethiopia",
+      posted_date: "2024-01-15",
+      expiry_date: "2024-02-15",
+      description: "We are looking for an experienced software engineer to join our growing tech team. You will be responsible for developing and maintaining our digital platforms, working with modern technologies like React, Node.js, and cloud services.",
+      requirements: "React\nNode.js\n5+ years experience\nTypeScript\nAWS\nDocker",
+      employment_type: "full-time",
+      experience_level: "senior",
+      salary_range: "80,000 - 120,000 ETB",
+      responsibilities: "Design and develop scalable web applications\nCollaborate with product teams\nWrite clean, maintainable code\nParticipate in code reviews\nMentor junior developers",
+      benefits: "Competitive salary\nHealth insurance\nProfessional development\nFlexible working hours\nModern office environment",
+      is_active: true,
+    },
+    {
+      id: "2",
+      title: "Content Producer",
+      department: "Media Production",
+      location: "Bahir Dar, Ethiopia",
+      posted_date: "2024-01-20",
+      expiry_date: "2024-02-20",
+      description: "Join our creative team as a content producer. You will work on various media projects including documentaries, news segments, and digital content creation for our multiple platforms.",
+      requirements: "Video Production\nAdobe Creative Suite\nStorytelling\n3+ years experience\nBroadcasting",
+      employment_type: "full-time",
+      experience_level: "mid",
+      salary_range: "50,000 - 70,000 ETB",
+      is_active: true,
+    },
+    {
+      id: "3",
+      title: "Marketing Specialist",
+      department: "Marketing & Communications",
+      location: "Addis Ababa, Ethiopia",
+      posted_date: "2024-01-18",
+      expiry_date: "2024-02-18",
+      description: "We're seeking a dynamic marketing specialist to develop and execute marketing campaigns that enhance our brand presence across various channels including digital, print, and broadcast media.",
+      requirements: "Digital Marketing\nSocial Media\nAnalytics\nCommunication Skills\nCampaign Management",
+      employment_type: "full-time",
+      experience_level: "mid",
+      salary_range: "45,000 - 65,000 ETB",
+      is_active: true,
+    },
+    {
+      id: "4",
+      title: "Broadcast Journalist",
+      department: "News & Current Affairs",
+      location: "Gondar, Ethiopia",
+      posted_date: "2024-01-22",
+      expiry_date: "2024-02-22",
+      description: "We are looking for a talented broadcast journalist to join our news team. You will research, write, and present news stories for television and radio broadcasts.",
+      requirements: "Journalism Degree\nBroadcasting Experience\nResearch Skills\nCommunication\nEthics",
+      employment_type: "full-time",
+      experience_level: "mid",
+      is_active: true,
+    },
+    {
+      id: "5",
+      title: "Graphic Designer",
+      department: "Creative Services",
+      location: "Addis Ababa, Ethiopia",
+      posted_date: "2024-01-25",
+      expiry_date: "2024-02-25",
+      description: "Join our creative team as a graphic designer. You will create visual content for various media including print, digital, and broadcast platforms.",
+      requirements: "Adobe Creative Suite\nTypography\nBrand Design\n2+ years experience\nPortfolio",
+      employment_type: "full-time",
+      experience_level: "mid",
+      is_active: true,
+    },
+    {
+      id: "6",
+      title: "HR Coordinator",
+      department: "Human Resources",
+      location: "Addis Ababa, Ethiopia",
+      posted_date: "2024-01-12",
+      expiry_date: "2024-02-12",
+      description: "We are seeking an HR coordinator to support our human resources team in recruitment, employee relations, and administrative tasks.",
+      requirements: "HR Experience\nCommunication Skills\nOrganizational Skills\nMS Office\nProblem Solving",
+      employment_type: "full-time",
+      experience_level: "entry",
+      is_active: true,
+    },
+  ];
 
   useEffect(() => {
-    setFilteredJobs(jobs);
-  }, [jobs]);
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        
+        // Try to fetch from Supabase first
+        const { data, error: supabaseError } = await supabase
+          .from('jobs')
+          .select('*')
+          .eq('is_active', true)
+          .order('posted_date', { ascending: false });
 
-  const handleSearch = () => {
-    let filtered = jobs;
+        if (supabaseError) {
+          console.warn('Supabase fetch failed, using mock data:', supabaseError);
+          setJobs(mockJobs);
+        } else {
+          setJobs(data || mockJobs);
+        }
+      } catch (err) {
+        console.warn('Error fetching jobs, using mock data:', err);
+        setJobs(mockJobs);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (job) =>
-          job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.requirements.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+    fetchJobs();
+  }, []);
+
+  const getJobById = async (id: string): Promise<Job | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.warn('Supabase fetch failed, using mock data:', error);
+        return mockJobs.find(job => job.id === id) || null;
+      }
+
+      return data;
+    } catch (err) {
+      console.warn('Error fetching job, using mock data:', err);
+      return mockJobs.find(job => job.id === id) || null;
     }
-
-    // Filter by department
-    if (selectedDepartment !== "All Departments") {
-      filtered = filtered.filter((job) => job.department === selectedDepartment);
-    }
-
-    // Filter by location
-    if (selectedLocation !== "All Locations") {
-      filtered = filtered.filter((job) => job.location === selectedLocation);
-    }
-
-    // Filter by employment type
-    if (selectedEmploymentType !== "All Types") {
-      filtered = filtered.filter((job) => job.employment_type === selectedEmploymentType);
-    }
-
-    // Filter by experience level
-    if (selectedExperienceLevel !== "All Levels") {
-      filtered = filtered.filter((job) => job.experience_level === selectedExperienceLevel);
-    }
-
-    // Filter by salary range
-    if (salaryRange.min || salaryRange.max) {
-      filtered = filtered.filter((job) => {
-        if (!job.salary_range) return false;
-        // Simple salary range filtering (in production, this would be more sophisticated)
-        const salaryText = job.salary_range.toLowerCase();
-        return salaryText.includes('etb') || salaryText.includes('birr');
-      });
-    }
-
-    // Filter remote jobs
-    if (remoteOnly) {
-      filtered = filtered.filter((job) => 
-        job.location.toLowerCase().includes('remote') || 
-        job.description.toLowerCase().includes('remote')
-      );
-    }
-
-    setFilteredJobs(filtered);
   };
 
-  const handleReset = () => {
-    setSearchTerm("");
-    setSelectedDepartment("All Departments");
-    setSelectedLocation("All Locations");
-    setSelectedEmploymentType("All Types");
-    setSelectedExperienceLevel("All Levels");
-    setSalaryRange({ min: "", max: "" });
-    setRemoteOnly(false);
-    setFilteredJobs(jobs);
+  const applyToJob = async (jobId: string, coverLetter: string, cvFile: File) => {
+    try {
+      // In a real implementation, this would upload the file and create the application
+      console.log('Applying to job:', jobId, 'with cover letter:', coverLetter, 'and CV:', cvFile.name);
+      
+      // Mock success response
+      return { success: true };
+    } catch (error) {
+      console.error('Error applying to job:', error);
+      return { success: false, error: 'Failed to submit application' };
+    }
   };
 
-  return (
-    <div className="min-h-screen py-8">
-      <div className="container">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
-            Job Opportunities
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Discover your next career opportunity with Amhara Media Corporation
-          </p>
-        </div>
+  const hasUserApplied = async (jobId: string): Promise<boolean> => {
+    try {
+      // In a real implementation, this would check if the current user has applied
+      console.log('Checking if user has applied to job:', jobId);
+      
+      // Mock response
+      return false;
+    } catch (error) {
+      console.error('Error checking application status:', error);
+      return false;
+    }
+  };
 
-        {/* Search and Filter Section */}
-        <Card className="mb-8 shadow-soft">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Filter className="mr-2 h-5 w-5" />
-              Search & Filter Jobs
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by job title, skills, or keywords..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                  <SelectTrigger className="w-full sm:w-[200px]">
-                    <Building className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All Departments">All Departments</SelectItem>
-                    {[...new Set(jobs.map(job => job.department))].map((dept) => (
-                      <SelectItem key={dept} value={dept}>
-                        {dept}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                  <SelectTrigger className="w-full sm:w-[200px]">
-                    <MapPin className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All Locations">All Locations</SelectItem>
-                    {[...new Set(jobs.map(job => job.location))].map((location) => (
-                      <SelectItem key={location} value={location}>
-                        {location}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            {/* Advanced Filters Toggle */}
-            <div className="flex items-center justify-between">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              >
-                <SlidersHorizontal className="mr-2 h-4 w-4" />
-                {showAdvancedFilters ? 'Hide' : 'Show'} Advanced Filters
-              </Button>
-            </div>
-
-            {/* Advanced Filters */}
-            {showAdvancedFilters && (
-              <div className="space-y-4 pt-4 border-t">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <Select value={selectedEmploymentType} onValueChange={setSelectedEmploymentType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Employment Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All Types">All Types</SelectItem>
-                      <SelectItem value="full-time">Full Time</SelectItem>
-                      <SelectItem value="part-time">Part Time</SelectItem>
-                      <SelectItem value="contract">Contract</SelectItem>
-                      <SelectItem value="internship">Internship</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={selectedExperienceLevel} onValueChange={setSelectedExperienceLevel}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Experience Level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All Levels">All Levels</SelectItem>
-                      <SelectItem value="entry">Entry Level</SelectItem>
-                      <SelectItem value="mid">Mid Level</SelectItem>
-                      <SelectItem value="senior">Senior Level</SelectItem>
-                      <SelectItem value="executive">Executive</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remote"
-                      checked={remoteOnly}
-                      onCheckedChange={setRemoteOnly}
-                    />
-                    <label htmlFor="remote" className="text-sm font-medium">
-                      Remote only
-                    </label>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Minimum Salary</label>
-                    <Input
-                      placeholder="e.g. 50000"
-                      value={salaryRange.min}
-                      onChange={(e) => setSalaryRange(prev => ({ ...prev, min: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Maximum Salary</label>
-                    <Input
-                      placeholder="e.g. 100000"
-                      value={salaryRange.max}
-                      onChange={(e) => setSalaryRange(prev => ({ ...prev, max: e.target.value }))}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={handleSearch} className="flex-1 sm:flex-none">
-                <Search className="mr-2 h-4 w-4" />
-                Search Jobs
-              </Button>
-              <Button variant="outline" onClick={handleReset} className="flex-1 sm:flex-none">
-                Reset Filters
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Results Summary */}
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h2 className="text-xl font-semibold">
-              {loading ? "Loading..." : filteredJobs.length === jobs.length 
-                ? `All Jobs (${filteredJobs.length})`
-                : `Search Results (${filteredJobs.length})`
-              }
-            </h2>
-            <Badge variant="outline" className="text-sm">
-              <Calendar className="mr-1 h-3 w-3" />
-              Updated Daily
-            </Badge>
-          </div>
-        </div>
-
-        {/* Jobs Grid */}
-        {loading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <Card key={i} className="shadow-soft">
-                <CardContent className="p-6">
-                  <div className="space-y-3">
-                    <div className="h-6 bg-muted animate-pulse rounded" />
-                    <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
-                    <div className="flex gap-2">
-                      <div className="h-6 bg-muted animate-pulse rounded w-20" />
-                      <div className="h-6 bg-muted animate-pulse rounded w-20" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : error ? (
-          <Card className="text-center py-12 shadow-soft">
-            <CardContent>
-              <div className="mx-auto mb-4 h-12 w-12 rounded-lg bg-destructive/10 flex items-center justify-center">
-                <Briefcase className="h-6 w-6 text-destructive" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Error loading jobs</h3>
-              <p className="text-muted-foreground mb-4">{error}</p>
-              <Button onClick={() => window.location.reload()}>Try Again</Button>
-            </CardContent>
-          </Card>
-        ) : filteredJobs.length === 0 ? (
-          <Card className="text-center py-12 shadow-soft">
-            <CardContent>
-              <div className="mx-auto mb-4 h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
-                <Search className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">No jobs found</h3>
-              <p className="text-muted-foreground mb-4">
-                Try adjusting your search criteria or browse all available positions.
-              </p>
-              <Button onClick={handleReset}>View All Jobs</Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredJobs.map((job) => (
-              <JobCard 
-                key={job.id}
-                id={job.id}
-                title={job.title}
-                department={job.department}
-                location={job.location}
-                postedDate={job.posted_date}
-                description={job.description}
-                requirements={job.requirements.split('\n').filter(Boolean)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return {
+    jobs,
+    loading,
+    error,
+    getJobById,
+    applyToJob,
+    hasUserApplied,
+  };
 };
-
-export default Jobs;
