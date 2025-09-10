@@ -195,6 +195,35 @@ export const useJobs = () => {
     }
   };
 
+  const getUserApplications = async (userId: string): Promise<JobApplication[]> => {
+    try {
+      // In a real implementation, this would fetch user applications from Supabase
+      const { data, error } = await supabase
+        .from('applications')
+        .select(`
+          *,
+          jobs (
+            title,
+            department,
+            location
+          )
+        `)
+        .eq('user_id', userId)
+        .order('applied_at', { ascending: false });
+
+      if (error) {
+        console.warn('Supabase fetch failed, using mock data:', error);
+        // Return mock applications for development
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching user applications:', error);
+      return [];
+    }
+  };
+
   return {
     jobs,
     loading,
