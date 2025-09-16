@@ -1,4 +1,4 @@
-# JobFlow Amhara - Job Portal for Amhara Media Corporation
+# Job Portal for Amhara Media Corporation
 
 > A comprehensive job portal application built for Amhara Media Corporation, enabling efficient recruitment management and job application processes.
 
