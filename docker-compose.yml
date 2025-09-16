@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # Frontend Application
+  jobflow-frontend:
+    build: .
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - jobflow-network
+    depends_on:
+      - supabase
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Supabase (Local Development)
+  supabase:
+    image: supabase/supabase:latest
+    ports:
+      - "54321:8000"
+    environment:
+      - POSTGRES_PASSWORD=your_postgres_password
+      - JWT_SECRET=your_jwt_secret
+      - ANON_KEY=your_anon_key
+      - SERVICE_ROLE_KEY=your_service_role_key
+    volumes:
+      - supabase_data:/var/lib/postgresql/data
+      - ./supabase:/docker-entrypoint-initdb.d
+    networks:
+      - jobflow-network
+    restart: unless-stopped
+
+  # Reverse Proxy (Production)
+  nginx-proxy:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/ssl/certs
+    networks:
+      - jobflow-network
+    depends_on:
+      - jobflow-frontend
+    restart: unless-stopped
+
+  # Redis for Caching (Optional)
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - jobflow-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  supabase_data:
+  redis_data:
+
+networks:
+  jobflow-network:
+    driver: bridge

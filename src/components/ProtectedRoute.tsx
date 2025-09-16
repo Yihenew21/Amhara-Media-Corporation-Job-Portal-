@@ -1,17 +1,19 @@
-import { ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { ReactNode } from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProtectedRouteProps {
   children: ReactNode;
   requireAdmin?: boolean;
   requireSuperAdmin?: boolean;
+  requireHRManager?: boolean;
 }
 
-const ProtectedRoute = ({ 
-  children, 
-  requireAdmin = false, 
-  requireSuperAdmin = false 
+const ProtectedRoute = ({
+  children,
+  requireAdmin = false,
+  requireSuperAdmin = false,
+  requireHRManager = false,
 }: ProtectedRouteProps) => {
   const { user, profile, loading, isAdmin, isSuperAdmin } = useAuth();
   const location = useLocation();
@@ -29,6 +31,10 @@ const ProtectedRoute = ({
   }
 
   if (requireSuperAdmin && !isSuperAdmin) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  if (requireHRManager && !isSuperAdmin && profile?.role !== "hr_manager") {
     return <Navigate to="/unauthorized" replace />;
   }
 

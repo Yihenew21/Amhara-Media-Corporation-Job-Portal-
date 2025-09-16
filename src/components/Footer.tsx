@@ -27,10 +27,19 @@ const Footer = () => {
   ];
 
   const jobCategories = [
-    { name: "Information Technology", href: "/jobs?department=Information Technology" },
+    {
+      name: "Information Technology",
+      href: "/jobs?department=Information Technology",
+    },
     { name: "Media Production", href: "/jobs?department=Media Production" },
-    { name: "Marketing & Communications", href: "/jobs?department=Marketing & Communications" },
-    { name: "News & Current Affairs", href: "/jobs?department=News & Current Affairs" },
+    {
+      name: "Marketing & Communications",
+      href: "/jobs?department=Marketing & Communications",
+    },
+    {
+      name: "News & Current Affairs",
+      href: "/jobs?department=News & Current Affairs",
+    },
   ];
 
   const resources = [
@@ -48,11 +57,27 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { name: "Facebook", icon: Facebook, href: "https://facebook.com/amharamedia" },
-    { name: "Twitter", icon: Twitter, href: "https://twitter.com/amharamedia" },
-    { name: "Instagram", icon: Instagram, href: "https://instagram.com/amharamedia" },
-    { name: "YouTube", icon: Youtube, href: "https://youtube.com/amharamedia" },
-    { name: "LinkedIn", icon: Linkedin, href: "https://linkedin.com/company/amharamedia" },
+    {
+      name: "Facebook",
+      icon: Facebook,
+      href: "https://www.facebook.com/AmharaMediaCorporation",
+    },
+    { name: "Twitter", icon: Twitter, href: "https://x.com/AMECOONLINE" },
+    {
+      name: "Telegram",
+      icon: Send,
+      href: "https://t.me/AmharaMassMedia",
+    },
+    {
+      name: "YouTube",
+      icon: Youtube,
+      href: "https://www.youtube.com/c/AmharaMediaCorporation",
+    },
+    {
+      name: "Tiktok",
+      icon: Linkedin,
+      href: "https://linkedin.com/company/ameco",
+    },
   ];
 
   return (
@@ -63,8 +88,12 @@ const Footer = () => {
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg hero-gradient">
-                <Briefcase className="h-6 w-6 text-white" />
+              <div className="flex items-center justify-center rounded-lg">
+                <img
+                  src="/logo.png"
+                  alt="Amhara Media Corporation logo"
+                  className="h-10 w-10"
+                />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-foreground">
@@ -74,10 +103,14 @@ const Footer = () => {
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Ethiopia's leading media organization, connecting talented professionals 
-              with exciting career opportunities in media, technology, and communications.
+              Ethiopia's leading media organization, connecting talented
+              professionals with exciting career opportunities in media,
+              technology, and communications.
             </p>
-            
+            <p className="text-sm text-primary leading-relaxed font-bold">
+              "ለሕብረተሰብ ለውጥ እንተጋለን"
+            </p>
+
             {/* Contact Info */}
             <div className="space-y-2">
               <div className="flex items-center text-sm text-muted-foreground">
@@ -93,35 +126,15 @@ const Footer = () => {
                 careers@amharamedia.com
               </div>
             </div>
-
-            {/* Social Links */}
-            <div className="flex space-x-2">
-              {socialLinks.map((social) => (
-                <Button
-                  key={social.name}
-                  variant="outline"
-                  size="sm"
-                  className="h-9 w-9 p-0"
-                  asChild
-                >
-                  <a
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={social.name}
-                  >
-                    <social.icon className="h-4 w-4" />
-                  </a>
-                </Button>
-              ))}
-            </div>
           </div>
 
           {/* Quick Links */}
           <div className="grid grid-cols-2 gap-8">
             {/* Quick Links */}
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold text-foreground">Quick Links</h4>
+              <h4 className="text-sm font-semibold text-foreground">
+                Quick Links
+              </h4>
               <ul className="space-y-2">
                 {quickLinks.map((link) => (
                   <li key={link.name}>
@@ -138,7 +151,9 @@ const Footer = () => {
 
             {/* Job Categories */}
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold text-foreground">Job Categories</h4>
+              <h4 className="text-sm font-semibold text-foreground">
+                Job Categories
+              </h4>
               <ul className="space-y-2">
                 {jobCategories.map((category) => (
                   <li key={category.name}>
@@ -154,16 +169,14 @@ const Footer = () => {
             </div>
           </div>
 
-
-
-
           {/* Follow Us */}
           <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-foreground pt-4">Follow Us</h4>
+            <h4 className="text-sm font-semibold text-foreground">Follow Us</h4>
             <p className="text-sm text-muted-foreground">
-              Stay connected with us on social media for the latest updates and news.
+              Stay connected with us on social media for the latest updates and
+              news.
             </p>
-            
+
             {/* Social Links */}
             <div className="flex space-x-2">
               {socialLinks.map((social) => (
@@ -171,7 +184,7 @@ const Footer = () => {
                   key={social.name}
                   variant="outline"
                   size="sm"
-                  className="h-9 w-9 p-0"
+                  className="h-9 w-9 p-0 hover:bg-primary hover:text-white"
                   asChild
                 >
                   <a
@@ -193,7 +206,7 @@ const Footer = () => {
 
       {/* Bottom Footer */}
       <div className="container py-6">
-        <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+        <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0">
           <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
             <p className="text-sm text-muted-foreground">
               © {currentYear} Amhara Media Corporation. All rights reserved.
@@ -201,14 +214,8 @@ const Footer = () => {
             <div className="flex items-center space-x-4 text-xs text-muted-foreground">
               <span>Made with ❤️ in Ethiopia</span>
               <Separator orientation="vertical" className="h-4" />
-              <span>Powered by Modern Technology</span>
+              <span>Powered by Yihenew Animut</span>
             </div>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <p className="text-xs text-muted-foreground">
-              Built with modern technology
-            </p>
           </div>
         </div>
       </div>

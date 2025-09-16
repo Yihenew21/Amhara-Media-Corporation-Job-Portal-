@@ -1,0 +1,102 @@
+* [33m156eede[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdevelop[m[33m, [m[1;31morigin/develop[m[33m)[m refactor: move whole-migration.sql to supabase/migrations directory
+* [33m73e6a2e[m fix: add missing TypeScript configuration file
+* [33mbea1223[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m docs: add comprehensive documentation
+* [33mc0ce2f2[m feat: add Docker containerization and deployment config
+* [33m781f5c5[m feat: add database schema and migrations
+* [33m1cb9295[m feat: add public assets and HTML entry point
+* [33mf241b71[m feat: implement core application functionality
+* [33m1b909ad[m config: add development configuration files
+* [33m354b827[m feat: initial project setup with dependencies
+* [33m5d3c0fa[m[33m ([m[1;31morigin/dev[m[33m)[m added cpmrehensive readme file for the project description
+* [33m2ae7961[m added test files used for testing purpose
+* [33me69d491[m added initial index files
+* [33mde6a59c[m added service files
+* [33m4f6c558[m added a page used for handling managing admins like add new admin or delete admin
+* [33md1bed68[m add a page used for handling communication between applicant and admins
+* [33md939abf[m added analytics functionlity for the admins
+* [33mb66f4bb[m added a comprehensive application managment for managing applicants application
+* [33m03c1b9b[m added a page used for editing posted jobs
+* [33m0e3c9ef[m added a page used for creating jobs
+* [33m657d6cd[m added job managment page for managing jobs
+* [33mbd95c99[m feat: implement Admin Dashboard with job management, application tracking, and analytics
+* [33mb91e44a[m feat: add Unauthorized page with access denial message and navigation options
+* [33m3ad3680[m feat: add NotFound page with 404 error handling and user feedback
+* [33mee5e1ad[m feat: add JobApplication page with CV upload and application submission functionality
+* [33m180b91e[m feat: implement User Dashboard with application tracking and profile management
+* [33me00a43d[m feat: add Contact page with form submission and contact information display
+* [33mda227e7[m feat: add About page with organizational overview, values, achievements, and career opportunities
+* [33m917f591[m feat: add JobDetail page with job information display and application functionality
+* [33mac3c050[m feat: implement Jobs page with advanced filtering and search functionality
+* [33m477dc20[m feat: add Registration page with form validation and user feedback
+* [33m8364df1[m feat: add Login page with authentication form and user role redirection
+* [33m47dc858[m feat: implement Home page with job statistics and featured job listings
+* [33m5a2aa42[m feat: add unit tests for error handling functions and message extraction
+* [33m97939b3[m feat: add error handling utilities and standardized error types for API responses
+* [33m4335ec3[m feat: add Supabase client and database schema for user profiles, jobs, applications, and admin management
+* [33m91e4ad6[m feat: add useNotifications hook for managing email notifications in the application
+* [33m1da6682[m feat: implement useJobs hook for job management and application handling
+* [33me786cd3[m feat: add useExport hook for exporting job, application, and analytics reports as CSV
+* [33m6e75ed9[m feat: implement AuthProvider and useAuth hook for user authentication management
+* [33mdc88a8c[m feat: add useAIAssessment hook for generating AI assessments
+* [33mbfde6ff[m feat: implement useToast hook for managing toast notifications
+* [33m378c256[m feat: add useIsMobile hook for mobile device detection
+* [33mabfe881[m feat: add hooks exports for useAuth, useJobs, useNotifications, useAIAssessment, useExport, useMobile, and useToast
+* [33mfeb3bb5[m feat: add UI components for skeleton, slider, sonner, switch, table, tabs, textarea, toast, toaster, toggle group, toggle, tooltip, and use-toast hooks
+* [33mee91d8c[m feat: add UI components for dialog, drawer, dropdown menu, form, hover card, OTP input, input, label, menubar, navigation menu, pagination, and popover
+* [33m8a59ec2[m feat: implement AdvancedJobFilters component for enhanced job search and filtering
+* [33mae08d58[m feat: add ErrorBoundary component for error handling and fallback UI
+* [33mc91f297[m feat: add ProtectedRoute component for route protection based on user roles
+* [33m894904e[m feat: add AIAssessmentCard component for generating and displaying AI assessments
+* [33md5100b2[m feat: add JobCard and SEO components for job listings and metadata management
+* [33m4522da9[m feat: add Footer component with navigation links, social media icons, and contact information
+* [33m9f81d9c[m feat: add Header component with responsive navigation and authentication options
+* [33mce14604[m feat: add index file to export layout and feature components
+* [33m9c0c687[m feat: add main entry point for the application with React rendering
+* [33m41784d6[m feat: add base styles and custom component styles for Amhara Media Corporation design system
+* [33m102aecc[m feat: implement main application structure with routing and protected routes
+* [33mc23287a[m feat: add initial Docker setup with Dockerfile and docker-compose.yml for frontend and Supabase services
+* [33mb695925[m feat: add initial configuration files for ESLint, PostCSS, Tailwind, Vite, and Vitest
+* [33m441e4b7[m feat: add initial HTML structure with meta tags for SEO and branding
+* [33m61a07a2[m feat: add favicon, logo, hero images, and robots.txt for SEO and branding
+* [33m058ba4e[m chore: add bun.lockb to track dependencies
+* [33m579e445[m chore: initialize project with package.json and dependencies
+* [33m521ac7e[m Add .gitignore file to exclude logs, build artifacts, and editor settings
+* [33m5a7a8b0[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix import paths for shadcn/ui components
+* [33mf4b438a[m Add missing getUserApplications function
+* [33m623caa9[m Clean up duplicate files and finalize project workflow
+* [33mb8144a3[m Fix useJobs hook export and update related files
+* [33m530b346[m Remove duplicate Checkbox import from useJobs.tsx
+* [33m01d007f[m Fix JSX syntax error with curly braces and backticks
+* [33m7368435[m Deleted vite.config.ts.timestamp-1757434334083-ee90eabc101f78.mjs
+* [33mff31ff9[m Added vite.config.ts.timestamp-1757434334083-ee90eabc101f78.mjs
+* [33mea65d5d[m Updated useJobs.tsx
+* [33mc377c4d[m Remove duplicate Checkbox import
+* [33md7c0a2c[m Updated useJobs.tsx
+* [33m422ef38[m Updated Jobs.tsx
+* [33m9c8dc53[m Complete Enhanced Search and Filtering Implementation
+* [33m7bcd48a[m Updated useJobs.tsx
+* [33m17ff15a[m Implement AI Assessment, Email Notifications, Export, and Enhanced Search
+* [33m664384a[m Implement AI Assessment, Email Notifications, Export, and Enhanced Search
+* [33mf05ebb1[m Fix undefined indexOf error in template Select component
+* [33m5e54736[m Fix undefined indexOf error in Communications Select component
+* [33m9e1ecae[m Implement Super Admin Management, Communication System, and Analytics
+* [33m9be9cd8[m Implement Job Forms, Application Management, and CV Upload
+* [33m47cce8b[m Fix Duplicate Variable Declarations in useAuth
+* [33m4848fa0[m Fix Duplicate ProtectedRoute Imports and Routes
+* [33mc666c04[m Updated App.tsx
+* [33md3be0e7[m Implement Missing Critical Features
+* [33m0cbc23f[m Implement Missing Critical Features
+* [33m70eea45[m Put Quick Links and Job Categories on Same Row
+* [33m2d857f4[m Put Quick Links and Job Categories on Same Row
+* [33ma6f9f66[m Remove Support and Legal Sections from Footer
+* [33me43371f[m Deleted vite.config.ts.timestamp-1757429340076-3bf6a960c16e3.mjs
+* [33m306caea[m Added vite.config.ts.timestamp-1757429340076-3bf6a960c16e3.mjs
+* [33mb2a97d3[m Remove Newsletter and App Download Sections
+* [33m4a8839f[m Add Modern Footer Component
+* [33me0088c0[m Updated package-lock.json
+* [33m6450e76[m Updated .gitignore
+* [33m757e52a[m Approve Lovable Tool Use
+* [33m65d267f[m Set up backend features
+* [33m6c757f5[m Connect to Supabase project
+* [33m3cc9393[m Complete Job Portal Setup
+* [33m7a4a2c4[m [skip lovable] Use tech stack vite_react_shadcn_ts_20250728_minor

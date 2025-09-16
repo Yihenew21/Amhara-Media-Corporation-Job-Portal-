@@ -3,10 +3,19 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Menu, X, User, Briefcase, LogIn, UserPlus, LogOut } from "lucide-react";
+import {
+  Menu,
+  X,
+  User,
+  Briefcase,
+  LogIn,
+  UserPlus,
+  LogOut,
+} from "lucide-react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { user, profile, signOut, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,14 +27,18 @@ const Header = () => {
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg hero-gradient">
-            <Briefcase className="h-6 w-6 text-white" />
+          <div className="flex items-center justify-center rounded-lg">
+            <img
+              src="/logo.png"
+              alt="Amhara Media Corporation logo"
+              className="h-12 w-12"
+            />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground">
+            <h1 className="text-base md:text-xl font-bold text-foreground">
               Amhara Media Corporation
             </h1>
-            <p className="text-xs text-muted-foreground">Job Portal</p>
+            <p className="text-xs text-primary">Job Portal</p>
           </div>
         </Link>
 
@@ -47,26 +60,6 @@ const Header = () => {
           >
             Jobs
           </Link>
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                isActive("/admin") ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
-              Admin Dashboard
-            </Link>
-          )}
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                isActive("/admin") ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
-              Admin Dashboard
-            </Link>
-          )}
           <Link
             to="/about"
             className={`text-sm font-medium transition-colors hover:text-primary ${
@@ -92,24 +85,33 @@ const Header = () => {
           ) : user ? (
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/dashboard">
+                <Link to={isAdmin ? "/admin" : "/dashboard"}>
                   <User className="mr-2 h-4 w-4" />
-                  Dashboard
+                  {isAdmin ? "Admin Dashboard" : "Dashboard"}
                 </Link>
               </Button>
               <span className="text-sm text-muted-foreground">
                 Welcome, {profile?.first_name || user.email}
               </span>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => {
-                  signOut();
-                  navigate('/');
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isLoggingOut}
+                onClick={async () => {
+                  setIsLoggingOut(true);
+                  try {
+                    await signOut();
+                    // Wait a bit for state to update
+                    setTimeout(() => {
+                      navigate("/");
+                    }, 100);
+                  } finally {
+                    setIsLoggingOut(false);
+                  }
                 }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Logout
+                {isLoggingOut ? "Logging out..." : "Logout"}
               </Button>
             </div>
           ) : (
@@ -137,7 +139,11 @@ const Header = () => {
           className="md:hidden"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
-          {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {isMenuOpen ? (
+            <X className="h-5 w-5 text-primary" />
+          ) : (
+            <Menu className="h-5 w-5 text-primary" />
+          )}
         </Button>
       </div>
 
@@ -159,24 +165,6 @@ const Header = () => {
             >
               Jobs
             </Link>
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className="block text-sm font-medium text-muted-foreground hover:text-primary"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Admin Dashboard
-              </Link>
-            )}
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className="block text-sm font-medium text-muted-foreground hover:text-primary"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Admin Dashboard
-              </Link>
-            )}
             <Link
               to="/about"
               className="block text-sm font-medium text-muted-foreground hover:text-primary"
@@ -194,32 +182,54 @@ const Header = () => {
             <div className="pt-3 border-t space-y-2">
               {user ? (
                 <div className="space-y-2">
-                  <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
-                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <Link
+                      to={isAdmin ? "/admin" : "/dashboard"}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
                       <User className="mr-2 h-4 w-4" />
-                      Dashboard
+                      {isAdmin ? "Admin Dashboard" : "Dashboard"}
                     </Link>
                   </Button>
                   <p className="text-sm text-muted-foreground">
                     Welcome, {profile?.first_name || user.email}
                   </p>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="w-full justify-start"
-                    onClick={() => {
-                      signOut();
-                      navigate('/');
-                      setIsMenuOpen(false);
+                    disabled={isLoggingOut}
+                    onClick={async () => {
+                      setIsLoggingOut(true);
+                      try {
+                        await signOut();
+                        // Wait a bit for state to update
+                        setTimeout(() => {
+                          navigate("/");
+                          setIsMenuOpen(false);
+                        }, 100);
+                      } finally {
+                        setIsLoggingOut(false);
+                      }
                     }}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    Logout
+                    {isLoggingOut ? "Logging out..." : "Logout"}
                   </Button>
                 </div>
               ) : (
                 <>
-                  <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    asChild
+                  >
                     <Link to="/login" onClick={() => setIsMenuOpen(false)}>
                       <LogIn className="mr-2 h-4 w-4" />
                       Login

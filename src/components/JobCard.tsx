@@ -1,8 +1,14 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Clock, Building } from "lucide-react";
+import { Calendar, MapPin, Clock, Building, Users } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface JobCardProps {
   id: string;
@@ -12,8 +18,10 @@ interface JobCardProps {
   postedDate: string;
   description: string;
   requirements: string[];
+  keyResponsibilities?: string[];
   expiryDate?: string;
   isActive?: boolean;
+  numberOfPositions?: number;
 }
 
 const JobCard = ({
@@ -24,9 +32,12 @@ const JobCard = ({
   postedDate,
   description,
   requirements,
+  keyResponsibilities = [],
   expiryDate = "2024-12-31",
   isActive = true,
+  numberOfPositions = 1,
 }: JobCardProps) => {
+  const { isAdmin } = useAuth();
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -36,14 +47,31 @@ const JobCard = ({
   };
 
   const isExpiringSoon = () => {
-    const expiryTime = new Date(expiryDate).getTime();
-    const now = new Date().getTime();
-    const daysUntilExpiry = (expiryTime - now) / (1000 * 60 * 60 * 24);
+    if (!expiryDate) return false;
+    const expiryDateObj = new Date(expiryDate);
+    const today = new Date();
+
+    // Set time to start of day for both dates
+    expiryDateObj.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const diffTime = expiryDateObj.getTime() - today.getTime();
+    const daysUntilExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
     return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
   };
 
   const isExpired = () => {
-    return new Date(expiryDate) < new Date();
+    if (!expiryDate) return false;
+    // Create date objects and compare only the date part (ignore time)
+    const expiryDateObj = new Date(expiryDate);
+    const today = new Date();
+
+    // Set time to start of day for both dates to compare only dates
+    expiryDateObj.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    return expiryDateObj < today;
   };
 
   return (
@@ -63,11 +91,17 @@ const JobCard = ({
             {isExpired() ? (
               <Badge variant="destructive">Expired</Badge>
             ) : isExpiringSoon() ? (
-              <Badge variant="secondary" className="bg-warning text-warning-foreground">
+              <Badge
+                variant="secondary"
+                className="bg-warning text-warning-foreground"
+              >
                 Expiring Soon
               </Badge>
             ) : (
-              <Badge variant="secondary" className="bg-success text-success-foreground">
+              <Badge
+                variant="secondary"
+                className="bg-success text-success-foreground"
+              >
                 Active
               </Badge>
             )}
@@ -81,21 +115,40 @@ const JobCard = ({
           {location}
         </div>
 
+        <div className="flex items-center text-sm text-muted-foreground">
+          <Users className="mr-2 h-4 w-4" />
+          {numberOfPositions}{" "}
+          {numberOfPositions === 1 ? "position" : "positions"} available
+        </div>
+
         <p className="text-sm text-muted-foreground line-clamp-3">
           {description}
         </p>
 
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">Key Requirements:</h4>
+          <h4 className="text-sm font-medium">Key Responsibilities:</h4>
           <div className="flex flex-wrap gap-1">
-            {requirements.slice(0, 3).map((req, index) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                {req}
-              </Badge>
-            ))}
-            {requirements.length > 3 && (
+            {(keyResponsibilities.length > 0
+              ? keyResponsibilities
+              : requirements
+            )
+              .slice(0, 3)
+              .map((item, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {item}
+                </Badge>
+              ))}
+            {(keyResponsibilities.length > 0
+              ? keyResponsibilities
+              : requirements
+            ).length > 3 && (
               <Badge variant="outline" className="text-xs">
-                +{requirements.length - 3} more
+                +
+                {(keyResponsibilities.length > 0
+                  ? keyResponsibilities
+                  : requirements
+                ).length - 3}{" "}
+                more
               </Badge>
             )}
           </div>
@@ -115,10 +168,15 @@ const JobCard = ({
 
       <CardFooter className="pt-4">
         <div className="flex w-full space-x-2">
-          <Button variant="outline" size="sm" className="flex-1" asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 hover:bg-primary/10"
+            asChild
+          >
             <Link to={`/jobs/${id}`}>View Details</Link>
           </Button>
-          {!isExpired() && (
+          {!isExpired() && !isAdmin && (
             <Button size="sm" className="flex-1" asChild>
               <Link to={`/jobs/${id}/apply`}>Apply Now</Link>
             </Button>

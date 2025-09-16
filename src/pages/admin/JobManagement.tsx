@@ -52,30 +52,59 @@ const JobManagement = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('jobs')
-        .select('*')
-        .order('posted_date', { ascending: false });
+        .from("jobs")
+        .select("*")
+        .order("posted_date", { ascending: false });
 
       if (error) throw error;
+
+      // Check for expired jobs and update them
+      const currentDate = new Date();
+      const expiredJobs = (data || []).filter(
+        (job) =>
+          job.expiry_date &&
+          new Date(job.expiry_date) < currentDate &&
+          job.is_active
+      );
+
+      // Update expired jobs to inactive
+      if (expiredJobs.length > 0) {
+        const expiredJobIds = expiredJobs.map((job) => job.id);
+        const { error: updateError } = await supabase
+          .from("jobs")
+          .update({ is_active: false })
+          .in("id", expiredJobIds);
+
+        if (updateError) {
+          console.error("Error updating expired jobs:", updateError);
+        } else {
+          console.log(`Automatically expired ${expiredJobs.length} jobs`);
+        }
+      }
 
       // Fetch application counts for each job
       const jobsWithCounts = await Promise.all(
         (data || []).map(async (job) => {
           const { count } = await supabase
-            .from('applications')
-            .select('*', { count: 'exact', head: true })
-            .eq('job_id', job.id);
+            .from("applications")
+            .select("*", { count: "exact", head: true })
+            .eq("job_id", job.id);
 
           return {
             ...job,
             applications_count: count || 0,
+            // Update is_active status for expired jobs
+            is_active:
+              job.expiry_date && new Date(job.expiry_date) < currentDate
+                ? false
+                : job.is_active,
           };
         })
       );
 
       setJobs(jobsWithCounts);
     } catch (error) {
-      console.error('Error fetching jobs:', error);
+      console.error("Error fetching jobs:", error);
       toast({
         title: "Error",
         description: "Failed to fetch jobs. Please try again.",
@@ -103,15 +132,16 @@ const JobManagement = () => {
   };
 
   const handleDeleteJob = async (jobId: string) => {
-    if (!confirm("Are you sure you want to delete this job? This action cannot be undone.")) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this job? This action cannot be undone."
+      )
+    ) {
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('jobs')
-        .delete()
-        .eq('id', jobId);
+      const { error } = await supabase.from("jobs").delete().eq("id", jobId);
 
       if (error) throw error;
 
@@ -122,7 +152,7 @@ const JobManagement = () => {
 
       fetchJobs();
     } catch (error) {
-      console.error('Error deleting job:', error);
+      console.error("Error deleting job:", error);
       toast({
         title: "Error",
         description: "Failed to delete job. Please try again.",
@@ -134,20 +164,22 @@ const JobManagement = () => {
   const toggleJobStatus = async (jobId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('jobs')
+        .from("jobs")
         .update({ is_active: !currentStatus })
-        .eq('id', jobId);
+        .eq("id", jobId);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: `Job ${!currentStatus ? 'activated' : 'deactivated'} successfully.`,
+        description: `Job ${
+          !currentStatus ? "activated" : "deactivated"
+        } successfully.`,
       });
 
       fetchJobs();
     } catch (error) {
-      console.error('Error updating job status:', error);
+      console.error("Error updating job status:", error);
       toast({
         title: "Error",
         description: "Failed to update job status. Please try again.",
@@ -178,14 +210,20 @@ const JobManagement = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center mb-4">
-            <Button variant="ghost" onClick={() => navigate('/admin')} className="mr-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/admin")}
+              className="mr-4"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Job Management</h1>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Job Management
+              </h1>
               <p className="text-muted-foreground">
                 Manage all job postings and applications
               </p>
@@ -234,7 +272,9 @@ const JobManagement = () => {
                 </div>
                 <h3 className="text-lg font-semibold mb-2">No jobs found</h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchTerm ? "Try adjusting your search criteria." : "No jobs have been posted yet."}
+                  {searchTerm
+                    ? "Try adjusting your search criteria."
+                    : "No jobs have been posted yet."}
                 </p>
                 <Button asChild>
                   <Link to="/admin/jobs/new">
@@ -253,15 +293,15 @@ const JobManagement = () => {
                       <div className="flex items-start justify-between">
                         <h3 className="text-xl font-semibold">{job.title}</h3>
                         <div className="flex items-center space-x-2">
-                          <Badge variant={job.is_active ? "default" : "secondary"}>
+                          <Badge
+                            variant={job.is_active ? "default" : "secondary"}
+                          >
                             {job.is_active ? "Active" : "Inactive"}
                           </Badge>
-                          <Badge variant="outline">
-                            {job.employment_type}
-                          </Badge>
+                          <Badge variant="outline">{job.employment_type}</Badge>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-6 text-sm text-muted-foreground">
                         <div className="flex items-center">
                           <Building className="mr-1 h-4 w-4" />
@@ -299,15 +339,15 @@ const JobManagement = () => {
                           <Edit className="h-4 w-4" />
                         </Link>
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => toggleJobStatus(job.id, job.is_active)}
                       >
                         {job.is_active ? "Deactivate" : "Activate"}
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => handleDeleteJob(job.id)}
                       >
