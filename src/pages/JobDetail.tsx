@@ -3,7 +3,14 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -35,8 +42,8 @@ const JobDetail = () => {
   const [coverLetter, setCoverLetter] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const { user } = useAuth();
+
+  const { user, isAdmin } = useAuth();
   const { getJobById, applyToJob, hasUserApplied } = useJobs();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -44,25 +51,32 @@ const JobDetail = () => {
   useEffect(() => {
     const fetchJob = async () => {
       if (!id) return;
-      
+
+      console.log("JobDetail: Fetching job with ID:", id);
       setLoading(true);
       const jobData = await getJobById(id);
+      console.log("JobDetail: Received job data:", jobData);
       setJob(jobData);
-      
+
       if (jobData && user) {
-        const applied = await hasUserApplied(id);
-        setHasApplied(applied);
+        try {
+          const applied = await hasUserApplied(id);
+          setHasApplied(applied);
+        } catch (error) {
+          console.warn("Error checking application status:", error);
+          setHasApplied(false);
+        }
       }
-      
+
       setLoading(false);
     };
 
     fetchJob();
-  }, [id, getJobById, hasUserApplied, user]);
+  }, [id]); // Only depend on id to prevent infinite loop
 
   const handleApply = () => {
     if (!user) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
     setShowApplicationModal(true);
@@ -72,21 +86,23 @@ const JobDetail = () => {
     if (!job || !cvFile) return;
 
     setIsSubmitting(true);
-    
+
     try {
       const result = await applyToJob(job.id, coverLetter, cvFile);
-      
+
       if (result.success) {
         toast({
           title: "Application submitted successfully!",
-          description: "We'll review your application and get back to you soon.",
+          description:
+            "We'll review your application and get back to you soon.",
         });
         setShowApplicationModal(false);
         setHasApplied(true);
       } else {
         toast({
           title: "Application failed",
-          description: result.error || "Failed to submit application. Please try again.",
+          description:
+            result.error || "Failed to submit application. Please try again.",
           variant: "destructive",
         });
       }
@@ -105,7 +121,11 @@ const JobDetail = () => {
     const file = e.target.files?.[0];
     if (file) {
       // Validate file type and size
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
       if (!allowedTypes.includes(file.type)) {
@@ -139,15 +159,29 @@ const JobDetail = () => {
   };
 
   const isExpired = () => {
-    if (!job) return false;
-    return new Date(job.expiry_date) < new Date();
+    if (!job || !job.expiry_date) return false;
+    // Create date objects and compare only the date part (ignore time)
+    const expiryDate = new Date(job.expiry_date);
+    const today = new Date();
+
+    // Set time to start of day for both dates to compare only dates
+    expiryDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    return expiryDate < today;
   };
 
   const daysUntilExpiry = () => {
-    if (!job) return 0;
-    const expiryTime = new Date(job.expiry_date).getTime();
-    const now = new Date().getTime();
-    return Math.ceil((expiryTime - now) / (1000 * 60 * 60 * 24));
+    if (!job || !job.expiry_date) return 0;
+    const expiryDate = new Date(job.expiry_date);
+    const today = new Date();
+
+    // Set time to start of day for both dates
+    expiryDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const diffTime = expiryDate.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   if (loading) {
@@ -179,7 +213,9 @@ const JobDetail = () => {
         <div className="container max-w-4xl">
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold mb-4">Job Not Found</h1>
-            <p className="text-muted-foreground mb-4">The job you're looking for doesn't exist or has been removed.</p>
+            <p className="text-muted-foreground mb-4">
+              The job you're looking for doesn't exist or has been removed.
+            </p>
             <Button asChild>
               <Link to="/jobs">Back to Jobs</Link>
             </Button>
@@ -227,7 +263,10 @@ const JobDetail = () => {
                     <Badge variant="destructive">Expired</Badge>
                   ) : (
                     <>
-                      <Badge variant="secondary" className="bg-success text-success-foreground">
+                      <Badge
+                        variant="secondary"
+                        className="bg-success text-success-foreground"
+                      >
                         Active
                       </Badge>
                       <Badge variant="outline">
@@ -251,19 +290,28 @@ const JobDetail = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {!isExpired() && (
+            {!isExpired() && !isAdmin && (
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button size="lg" className="flex-1 sm:flex-none" asChild>
-                  <Link to={`/jobs/${id}/apply`}>
-                    <Users className="mr-2 h-5 w-5" />
-                    Apply for this Position
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <Link to="/register">
-                    Create Account to Apply
-                  </Link>
-                </Button>
+                {user ? (
+                  <Button size="lg" className="flex-1 sm:flex-none" asChild>
+                    <Link to={`/jobs/${id}/apply`}>
+                      <Users className="mr-2 h-5 w-5" />
+                      Apply for this Position
+                    </Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button size="lg" className="flex-1 sm:flex-none" asChild>
+                      <Link to="/login">
+                        <Users className="mr-2 h-5 w-5" />
+                        Login to Apply
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="lg" asChild>
+                      <Link to="/register">Create Account to Apply</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             )}
           </CardContent>
@@ -279,8 +327,11 @@ const JobDetail = () => {
               </CardHeader>
               <CardContent>
                 <div className="prose prose-gray max-w-none">
-                  {job.description.split('\n\n').map((paragraph, index) => (
-                    <p key={index} className="mb-4 text-muted-foreground leading-relaxed">
+                  {job.description.split("\n\n").map((paragraph, index) => (
+                    <p
+                      key={index}
+                      className="mb-4 text-muted-foreground leading-relaxed"
+                    >
                       {paragraph}
                     </p>
                   ))}
@@ -289,19 +340,24 @@ const JobDetail = () => {
             </Card>
 
             {/* Key Responsibilities */}
-            {job.responsibilities && (
+            {job.key_responsibilities && (
               <Card className="shadow-soft">
                 <CardHeader>
                   <CardTitle>Key Responsibilities</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
-                    {job.responsibilities.split('\n').filter(Boolean).map((responsibility, index) => (
-                      <li key={index} className="flex items-start">
-                        <CheckCircle className="mr-3 h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                        <span className="text-muted-foreground">{responsibility}</span>
-                      </li>
-                    ))}
+                    {job.key_responsibilities
+                      .split("\n")
+                      .filter(Boolean)
+                      .map((responsibility, index) => (
+                        <li key={index} className="flex items-start">
+                          <CheckCircle className="mr-3 h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
+                            {responsibility}
+                          </span>
+                        </li>
+                      ))}
                   </ul>
                 </CardContent>
               </Card>
@@ -314,12 +370,17 @@ const JobDetail = () => {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {job.requirements.split('\n').filter(Boolean).map((requirement, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle className="mr-3 h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-muted-foreground">{requirement}</span>
-                    </li>
-                  ))}
+                  {job.requirements
+                    .split("\n")
+                    .filter(Boolean)
+                    .map((requirement, index) => (
+                      <li key={index} className="flex items-start">
+                        <CheckCircle className="mr-3 h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                        <span className="text-muted-foreground">
+                          {requirement}
+                        </span>
+                      </li>
+                    ))}
                 </ul>
               </CardContent>
             </Card>
@@ -328,17 +389,26 @@ const JobDetail = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Quick Apply */}
-            {!isExpired() && (
+            {!isExpired() && !isAdmin && (
               <Card className="shadow-soft">
                 <CardHeader>
                   <CardTitle className="text-lg">Quick Apply</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button className="w-full" asChild>
-                    <Link to={`/jobs/${id}/apply`}>
-                      Apply Now
-                    </Link>
-                  </Button>
+                  {user ? (
+                    <Button className="w-full" asChild>
+                      <Link to={`/jobs/${id}/apply`}>Apply Now</Link>
+                    </Button>
+                  ) : (
+                    <div className="space-y-2">
+                      <Button className="w-full" asChild>
+                        <Link to="/login">Login to Apply</Link>
+                      </Button>
+                      <Button variant="outline" className="w-full" asChild>
+                        <Link to="/register">Create Account</Link>
+                      </Button>
+                    </div>
+                  )}
                   <p className="text-sm text-muted-foreground text-center">
                     Application deadline: {formatDate(job.expiry_date)}
                   </p>
@@ -354,12 +424,17 @@ const JobDetail = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {job.benefits.split('\n').filter(Boolean).map((benefit, index) => (
-                      <li key={index} className="flex items-start text-sm">
-                        <CheckCircle className="mr-2 h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                        <span className="text-muted-foreground">{benefit}</span>
-                      </li>
-                    ))}
+                    {job.benefits
+                      .split("\n")
+                      .filter(Boolean)
+                      .map((benefit, index) => (
+                        <li key={index} className="flex items-start text-sm">
+                          <CheckCircle className="mr-2 h-4 w-4 text-success mt-0.5 flex-shrink-0" />
+                          <span className="text-muted-foreground">
+                            {benefit}
+                          </span>
+                        </li>
+                      ))}
                   </ul>
                 </CardContent>
               </Card>
@@ -368,18 +443,18 @@ const JobDetail = () => {
             {/* Company Info */}
             <Card className="shadow-soft">
               <CardHeader>
-                <CardTitle className="text-lg">About Amhara Media Corporation</CardTitle>
+                <CardTitle className="text-lg">
+                  About Amhara Media Corporation
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Amhara Media Corporation is a leading media organization in Ethiopia, 
-                  committed to delivering quality news, entertainment, and educational content 
-                  to our diverse audience.
+                  Amhara Media Corporation is a leading media organization in
+                  Ethiopia, committed to delivering quality news, entertainment,
+                  and educational content to our diverse audience.
                 </p>
                 <Button variant="outline" size="sm" className="w-full" asChild>
-                  <Link to="/about">
-                    Learn More About Us
-                  </Link>
+                  <Link to="/about">Learn More About Us</Link>
                 </Button>
               </CardContent>
             </Card>

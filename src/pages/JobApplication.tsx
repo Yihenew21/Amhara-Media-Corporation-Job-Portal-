@@ -24,7 +24,7 @@ import {
 const JobApplication = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const { getJobById, applyToJob, hasUserApplied } = useJobs();
   const { toast } = useToast();
 
@@ -37,12 +37,17 @@ const JobApplication = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate('/login');
+      navigate("/login");
+      return;
+    }
+
+    if (isAdmin) {
+      navigate("/admin");
       return;
     }
 
     fetchJobAndApplicationStatus();
-  }, [id, user]);
+  }, [id, user, isAdmin]);
 
   const fetchJobAndApplicationStatus = async () => {
     if (!id) return;
@@ -51,13 +56,13 @@ const JobApplication = () => {
       setLoading(true);
       const [jobData, applicationStatus] = await Promise.all([
         getJobById(id),
-        hasUserApplied(id)
+        hasUserApplied(id),
       ]);
 
       setJob(jobData);
       setHasApplied(applicationStatus);
     } catch (error) {
-      console.error('Error fetching job data:', error);
+      console.error("Error fetching job data:", error);
       toast({
         title: "Error",
         description: "Failed to load job details. Please try again.",
@@ -72,7 +77,11 @@ const JobApplication = () => {
     const file = e.target.files?.[0];
     if (file) {
       // Validate file type
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
       if (!allowedTypes.includes(file.type)) {
@@ -99,7 +108,7 @@ const JobApplication = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!cvFile) {
       toast({
         title: "CV Required",
@@ -113,17 +122,19 @@ const JobApplication = () => {
 
     try {
       const result = await applyToJob(id, coverLetter, cvFile);
-      
+
       if (result.success) {
         toast({
           title: "Application submitted successfully!",
-          description: "We'll review your application and get back to you soon.",
+          description:
+            "We'll review your application and get back to you soon.",
         });
         setHasApplied(true);
       } else {
         toast({
           title: "Application failed",
-          description: result.error || "Failed to submit application. Please try again.",
+          description:
+            result.error || "Failed to submit application. Please try again.",
           variant: "destructive",
         });
       }
@@ -181,10 +192,13 @@ const JobApplication = () => {
           <Card className="text-center shadow-medium">
             <CardContent className="py-12">
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
-              <h1 className="text-2xl font-bold mb-4">Application Submitted!</h1>
+              <h1 className="text-2xl font-bold mb-4">
+                Application Submitted!
+              </h1>
               <p className="text-muted-foreground mb-6">
-                You have already applied for this position. We'll review your application 
-                and contact you if you're selected for the next stage.
+                You have already applied for this position. We'll review your
+                application and contact you if you're selected for the next
+                stage.
               </p>
               <div className="flex gap-4 justify-center">
                 <Button asChild>
@@ -214,7 +228,9 @@ const JobApplication = () => {
               </Link>
             </Button>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Apply for Position</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Apply for Position
+          </h1>
           <p className="text-muted-foreground">{job.title}</p>
         </div>
 
@@ -229,21 +245,23 @@ const JobApplication = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Personal Information (Pre-filled) */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Personal Information</h3>
+                    <h3 className="text-lg font-semibold">
+                      Personal Information
+                    </h3>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label>First Name</Label>
-                        <Input 
-                          value={profile?.first_name || ''} 
-                          disabled 
+                        <Input
+                          value={profile?.first_name || ""}
+                          disabled
                           className="bg-muted"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label>Last Name</Label>
-                        <Input 
-                          value={profile?.last_name || ''} 
-                          disabled 
+                        <Input
+                          value={profile?.last_name || ""}
+                          disabled
                           className="bg-muted"
                         />
                       </div>
@@ -251,17 +269,17 @@ const JobApplication = () => {
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label>Email</Label>
-                        <Input 
-                          value={user?.email || ''} 
-                          disabled 
+                        <Input
+                          value={user?.email || ""}
+                          disabled
                           className="bg-muted"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label>Phone</Label>
-                        <Input 
-                          value={profile?.phone || 'Not provided'} 
-                          disabled 
+                        <Input
+                          value={profile?.phone || "Not provided"}
+                          disabled
                           className="bg-muted"
                         />
                       </div>
@@ -279,7 +297,10 @@ const JobApplication = () => {
                             <span className="text-primary hover:underline">
                               Click to upload your CV
                             </span>
-                            <span className="text-muted-foreground"> or drag and drop</span>
+                            <span className="text-muted-foreground">
+                              {" "}
+                              or drag and drop
+                            </span>
                           </Label>
                           <Input
                             id="cv-upload"
@@ -296,7 +317,9 @@ const JobApplication = () => {
                       {cvFile && (
                         <div className="mt-4 p-3 bg-muted rounded-lg flex items-center">
                           <FileText className="h-5 w-5 text-primary mr-2" />
-                          <span className="text-sm font-medium">{cvFile.name}</span>
+                          <span className="text-sm font-medium">
+                            {cvFile.name}
+                          </span>
                           <Button
                             type="button"
                             variant="ghost"
@@ -313,7 +336,9 @@ const JobApplication = () => {
 
                   {/* Cover Letter */}
                   <div className="space-y-2">
-                    <Label htmlFor="cover-letter">Cover Letter (Optional)</Label>
+                    <Label htmlFor="cover-letter">
+                      Cover Letter (Optional)
+                    </Label>
                     <Textarea
                       id="cover-letter"
                       value={coverLetter}
@@ -355,24 +380,36 @@ const JobApplication = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">Position</h4>
+                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                    Position
+                  </h4>
                   <p className="font-medium">{job.title}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">Department</h4>
+                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                    Department
+                  </h4>
                   <p>{job.department}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">Location</h4>
+                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                    Location
+                  </h4>
                   <p>{job.location}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">Employment Type</h4>
-                  <p className="capitalize">{job.employment_type.replace('_', ' ')}</p>
+                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                    Employment Type
+                  </h4>
+                  <p className="capitalize">
+                    {job.employment_type.replace("_", " ")}
+                  </p>
                 </div>
                 {job.salary_range && (
                   <div>
-                    <h4 className="font-semibold text-sm text-muted-foreground mb-1">Salary Range</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                      Salary Range
+                    </h4>
                     <p>{job.salary_range}</p>
                   </div>
                 )}

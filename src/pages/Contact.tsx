@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   MapPin,
   Phone,
@@ -23,14 +24,14 @@ const contactInfo = [
     details: [
       "Amhara Media Corporation",
       "Bahir Dar, Ethiopia",
-      "P.O. Box 795",
+      "P.O. Box 955",
     ],
   },
   {
     icon: Phone,
     title: "Phone Numbers",
     details: [
-      "+251 58 220 0123 (Main)",
+      "058 226 57 32",
       "+251 58 220 0456 (HR)",
       "+251 58 220 0789 (News)",
     ],
@@ -78,14 +79,58 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate form submission
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
+      // Validate required fields
+      if (
+        !formData.name ||
+        !formData.email ||
+        !formData.subject ||
+        !formData.message
+      ) {
+        toast({
+          title: "Missing required fields",
+          description: "Please fill in all required fields.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Save message to database
+      console.log("Attempting to save contact message:", {
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject,
+        department: formData.department || "general",
+      });
+
+      const { data, error } = await supabase
+        .from("contact_messages")
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone || null,
+            subject: formData.subject,
+            message: formData.message,
+            department: formData.department || "general",
+            status: "new",
+            priority: "medium",
+          },
+        ])
+        .select();
+
+      console.log("Database response:", { data, error });
+
+      if (error) {
+        console.error("Error saving contact message:", error);
+        throw error;
+      }
+
       toast({
         title: "Message sent successfully!",
-        description: "We'll get back to you within 24 hours.",
+        description:
+          "We'll get back to you within 24 hours. Thank you for contacting us!",
       });
-      
+
       // Reset form
       setFormData({
         name: "",
@@ -96,9 +141,10 @@ const Contact = () => {
         department: "",
       });
     } catch (error) {
+      console.error("Contact form submission error:", error);
       toast({
         title: "Failed to send message",
-        description: "Please try again later.",
+        description: "Please try again later or contact us directly.",
         variant: "destructive",
       });
     } finally {
@@ -119,8 +165,8 @@ const Contact = () => {
             Get in Touch
           </h1>
           <p className="text-lg text-muted-foreground">
-            Have questions about career opportunities or want to learn more about our organization? 
-            We'd love to hear from you.
+            Have questions about career opportunities or want to learn more
+            about our organization? We'd love to hear from you.
           </p>
         </div>
 
@@ -143,7 +189,9 @@ const Contact = () => {
                       type="text"
                       placeholder="Your full name"
                       value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                       required
                     />
                   </div>
@@ -154,7 +202,9 @@ const Contact = () => {
                       type="email"
                       placeholder="your.email@example.com"
                       value={formData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("email", e.target.value)
+                      }
                       required
                     />
                   </div>
@@ -168,7 +218,9 @@ const Contact = () => {
                       type="tel"
                       placeholder="+251 9XX XXX XXX"
                       value={formData.phone}
-                      onChange={(e) => handleInputChange("phone", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("phone", e.target.value)
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -177,7 +229,9 @@ const Contact = () => {
                       id="department"
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       value={formData.department}
-                      onChange={(e) => handleInputChange("department", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("department", e.target.value)
+                      }
                     >
                       <option value="">Select Department</option>
                       <option value="hr">Human Resources</option>
@@ -195,7 +249,9 @@ const Contact = () => {
                     type="text"
                     placeholder="Brief subject of your message"
                     value={formData.subject}
-                    onChange={(e) => handleInputChange("subject", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("subject", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -207,7 +263,9 @@ const Contact = () => {
                     placeholder="Please describe your inquiry or message in detail..."
                     className="min-h-[120px]"
                     value={formData.message}
-                    onChange={(e) => handleInputChange("message", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("message", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -250,7 +308,10 @@ const Contact = () => {
                     <div>
                       <h3 className="font-semibold mb-1">{info.title}</h3>
                       {info.details.map((detail, detailIndex) => (
-                        <p key={detailIndex} className="text-sm text-muted-foreground">
+                        <p
+                          key={detailIndex}
+                          className="text-sm text-muted-foreground"
+                        >
                           {detail}
                         </p>
                       ))}
@@ -267,12 +328,17 @@ const Contact = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {departments.map((dept, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                  >
                     <div className="flex items-center space-x-3">
                       <dept.icon className="h-5 w-5 text-primary" />
                       <div>
                         <h4 className="font-medium text-sm">{dept.name}</h4>
-                        <p className="text-xs text-muted-foreground">{dept.email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {dept.email}
+                        </p>
                       </div>
                     </div>
                     <Button variant="outline" size="sm">
@@ -290,15 +356,14 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <div className="aspect-video rounded-lg bg-muted flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Interactive map coming soon
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Bahir Dar, Ethiopia
-                    </p>
-                  </div>
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3908.338999192938!2d37.35891449999999!3d11.599162799999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1644cde17753e6a5%3A0x5d6120ad32310223!2zQW1oYXJhIE1lZGlhIENvcnBvcmF0aW9uL-GKoOGImuGKrg!5e0!3m2!1sen!2set!4v1757794193413!5m2!1sen!2set"
+                    width="400"
+                    height="300"
+                    allowFullScreen={true}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  ></iframe>
                 </div>
               </CardContent>
             </Card>

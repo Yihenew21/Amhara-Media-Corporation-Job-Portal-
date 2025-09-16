@@ -10,17 +10,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, MapPin, Building, Calendar, Briefcase, SlidersHorizontal } from "lucide-react";
+import {
+  Search,
+  Filter,
+  MapPin,
+  Building,
+  Calendar,
+  Briefcase,
+  SlidersHorizontal,
+} from "lucide-react";
 import JobCard from "@/components/JobCard";
 import { useJobs } from "@/hooks/useJobs";
+import AdvancedJobFilters, {
+  JobFilters,
+} from "@/components/AdvancedJobFilters";
 
 const Jobs = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState("All Departments");
-  const [selectedLocation, setSelectedLocation] = useState("All Locations");
-  const [selectedEmploymentType, setSelectedEmploymentType] = useState("All Types");
-  const [selectedExperienceLevel, setSelectedExperienceLevel] = useState("All Levels");
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [filters, setFilters] = useState<JobFilters>({});
   const { jobs, loading, error } = useJobs();
   const [filteredJobs, setFilteredJobs] = useState(jobs);
 
@@ -31,45 +37,83 @@ const Jobs = () => {
   const handleSearch = () => {
     let filtered = jobs;
 
-    // Filter by search term
-    if (searchTerm) {
+    // Text query
+    if (filters.query) {
+      const q = filters.query.toLowerCase();
       filtered = filtered.filter(
         (job) =>
-          job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.requirements.toLowerCase().includes(searchTerm.toLowerCase())
+          job.title.toLowerCase().includes(q) ||
+          job.description.toLowerCase().includes(q) ||
+          job.requirements.toLowerCase().includes(q)
       );
     }
 
-    // Filter by department
-    if (selectedDepartment !== "All Departments") {
-      filtered = filtered.filter((job) => job.department === selectedDepartment);
+    if (filters.department) {
+      filtered = filtered.filter(
+        (job) => job.department === filters.department
+      );
     }
 
-    // Filter by location
-    if (selectedLocation !== "All Locations") {
-      filtered = filtered.filter((job) => job.location === selectedLocation);
+    if (filters.location) {
+      filtered = filtered.filter((job) => job.location === filters.location);
     }
 
-    // Filter by employment type
-    if (selectedEmploymentType !== "All Types") {
-      filtered = filtered.filter((job) => job.employment_type === selectedEmploymentType);
+    if (filters.employmentType) {
+      filtered = filtered.filter(
+        (job) => job.employment_type === filters.employmentType
+      );
     }
 
-    // Filter by experience level
-    if (selectedExperienceLevel !== "All Levels") {
-      filtered = filtered.filter((job) => job.experience_level === selectedExperienceLevel);
+    if (filters.experienceLevel) {
+      filtered = filtered.filter(
+        (job) => job.experience_level === filters.experienceLevel
+      );
     }
-    
+
+    if (filters.salaryMin) {
+      filtered = filtered.filter((job) => {
+        // If job has salary_range like "x - y ETB", attempt to parse min value
+        if (!job.salary_range) return true;
+        const match = String(job.salary_range).match(/(\d[\d,]*)/);
+        const min = match ? Number(match[1].replace(/,/g, "")) : 0;
+        return min >= (filters.salaryMin as number);
+      });
+    }
+
+    if (filters.salaryMax) {
+      filtered = filtered.filter((job) => {
+        if (!job.salary_range) return true;
+        const nums = String(job.salary_range).match(/(\d[\d,]*)/g);
+        const max =
+          nums && nums.length > 1
+            ? Number(nums[1].replace(/,/g, ""))
+            : Number(nums?.[0]?.replace(/,/g, "") || 0);
+        return max <= (filters.salaryMax as number);
+      });
+    }
+
+    // Posted within X days
+    if (filters.postedWithin) {
+      const days = Number(filters.postedWithin);
+      const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+      filtered = filtered.filter(
+        (job) => new Date(job.posted_date).getTime() >= cutoff
+      );
+    }
+
+    // Skills
+    if (filters.skills && filters.skills.length) {
+      filtered = filtered.filter((job) => {
+        const req = job.requirements.toLowerCase();
+        return filters.skills!.some((s) => req.includes(s.toLowerCase()));
+      });
+    }
+
     setFilteredJobs(filtered);
   };
 
   const handleReset = () => {
-    setSearchTerm("");
-    setSelectedDepartment("All Departments");
-    setSelectedLocation("All Locations");
-    setSelectedEmploymentType("All Types");
-    setSelectedExperienceLevel("All Levels");
+    setFilters({});
     setFilteredJobs(jobs);
   };
 
@@ -87,111 +131,37 @@ const Jobs = () => {
         </div>
 
         {/* Search and Filter Section */}
-        <Card className="mb-8 shadow-soft">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Filter className="mr-2 h-5 w-5" />
-              Search & Filter Jobs
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by job title, skills, or keywords..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                  <SelectTrigger className="w-full sm:w-[200px]">
-                    <Building className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All Departments">All Departments</SelectItem>
-                    {[...new Set(jobs.map(job => job.department))].map((dept) => (
-                      <SelectItem key={dept} value={dept}>
-                        {dept}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                  <SelectTrigger className="w-full sm:w-[200px]">
-                    <MapPin className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All Locations">All Locations</SelectItem>
-                    {[...new Set(jobs.map(job => job.location))].map((location) => (
-                      <SelectItem key={location} value={location}>
-                        {location}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            {/* Advanced Filters Toggle */}
-            <div className="flex items-center justify-between">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              >
-                <SlidersHorizontal className="mr-2 h-4 w-4" />
-                {showAdvancedFilters ? 'Hide' : 'Show'} Advanced Filters
-              </Button>
-            </div>
-
-            {/* Advanced Filters */}
-            {showAdvancedFilters && (
-              <div className="space-y-4 pt-4 border-t">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <Select value={selectedEmploymentType} onValueChange={setSelectedEmploymentType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Employment Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All Types">All Types</SelectItem>
-                      <SelectItem value="full-time">Full Time</SelectItem>
-                      <SelectItem value="part-time">Part Time</SelectItem>
-                      <SelectItem value="contract">Contract</SelectItem>
-                      <SelectItem value="internship">Internship</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
-            
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={handleSearch} className="flex-1 sm:flex-none">
-                <Search className="mr-2 h-4 w-4" />
-                Search Jobs
-              </Button>
-              <Button variant="outline" onClick={handleReset} className="flex-1 sm:flex-none">
-                Reset Filters
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mb-8">
+          <AdvancedJobFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            onReset={handleReset}
+            jobCount={filteredJobs.length}
+          />
+          <div className="mt-4 flex flex-col sm:flex-row gap-3">
+            <Button onClick={handleSearch} className="flex-1 sm:flex-none">
+              <Search className="mr-2 h-4 w-4" />
+              Search Jobs
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              className="flex-1 sm:flex-none"
+            >
+              Reset Filters
+            </Button>
+          </div>
+        </div>
 
         {/* Results Summary */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <h2 className="text-xl font-semibold">
-              {loading ? "Loading..." : filteredJobs.length === jobs.length 
+              {loading
+                ? "Loading..."
+                : filteredJobs.length === jobs.length
                 ? `All Jobs (${filteredJobs.length})`
-                : `Search Results (${filteredJobs.length})`
-              }
+                : `Search Results (${filteredJobs.length})`}
             </h2>
             <Badge variant="outline" className="text-sm">
               <Calendar className="mr-1 h-3 w-3" />
@@ -226,7 +196,9 @@ const Jobs = () => {
               </div>
               <h3 className="text-lg font-semibold mb-2">Error loading jobs</h3>
               <p className="text-muted-foreground mb-4">{error}</p>
-              <Button onClick={() => window.location.reload()}>Try Again</Button>
+              <Button onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
             </CardContent>
           </Card>
         ) : filteredJobs.length === 0 ? (
@@ -237,7 +209,8 @@ const Jobs = () => {
               </div>
               <h3 className="text-lg font-semibold mb-2">No jobs found</h3>
               <p className="text-muted-foreground mb-4">
-                Try adjusting your search criteria or browse all available positions.
+                Try adjusting your search criteria or browse all available
+                positions.
               </p>
               <Button onClick={handleReset}>View All Jobs</Button>
             </CardContent>
@@ -245,7 +218,7 @@ const Jobs = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredJobs.map((job) => (
-              <JobCard 
+              <JobCard
                 key={job.id}
                 id={job.id}
                 title={job.title}
@@ -253,7 +226,15 @@ const Jobs = () => {
                 location={job.location}
                 postedDate={job.posted_date}
                 description={job.description}
-                requirements={job.requirements.split('\n').filter(Boolean)}
+                requirements={job.requirements.split("\n").filter(Boolean)}
+                keyResponsibilities={
+                  job.key_responsibilities
+                    ? job.key_responsibilities.split("\n").filter(Boolean)
+                    : []
+                }
+                expiryDate={job.expiry_date}
+                isActive={job.is_active}
+                numberOfPositions={job.number_of_positions}
               />
             ))}
           </div>

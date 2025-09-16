@@ -3,7 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
@@ -19,14 +25,19 @@ const Login = () => {
     rememberMe: false,
   });
   const { toast } = useToast();
-  const { signIn, user } = useAuth();
+  const { signIn, user, profile, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      navigate('/');
+    if (user && profile) {
+      // Redirect based on user role
+      if (isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     }
-  }, [user, navigate]);
+  }, [user, profile, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,11 +45,12 @@ const Login = () => {
 
     try {
       const { error } = await signIn(formData.email, formData.password);
-      
+
       if (error) {
         toast({
           title: "Login failed",
-          description: error.message || "Please check your credentials and try again.",
+          description:
+            error.message || "Please check your credentials and try again.",
           variant: "destructive",
         });
       } else {
@@ -46,7 +58,10 @@ const Login = () => {
           title: "Login successful!",
           description: "Welcome back to Amhara Media Corporation Job Portal.",
         });
-        navigate('/');
+        // Small delay to allow profile to be fetched
+        setTimeout(() => {
+          // The useEffect will handle navigation based on user role
+        }, 500);
       }
     } catch (error) {
       toast({
@@ -110,7 +125,9 @@ const Login = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value)
+                    }
                     required
                   />
                   <Button
@@ -134,7 +151,7 @@ const Login = () => {
                   <Checkbox
                     id="remember"
                     checked={formData.rememberMe}
-                    onCheckedChange={(checked) => 
+                    onCheckedChange={(checked) =>
                       handleInputChange("rememberMe", checked as boolean)
                     }
                   />
@@ -176,31 +193,16 @@ const Login = () => {
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
-                <Link to="/register" className="text-primary hover:underline font-medium">
+                <Link
+                  to="/register"
+                  className="text-primary hover:underline font-medium"
+                >
                   Sign up here
                 </Link>
               </p>
             </div>
-
-            <Alert className="mt-6">
-              <AlertDescription className="text-sm">
-                <strong>Demo Login:</strong> Use any email and password to test the login functionality.
-              </AlertDescription>
-            </Alert>
           </CardContent>
         </Card>
-
-        {/* Admin Login */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-muted-foreground mb-2">
-            Are you an administrator?
-          </p>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/admin/login">
-              Admin Login
-            </Link>
-          </Button>
-        </div>
       </div>
     </div>
   );

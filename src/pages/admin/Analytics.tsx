@@ -45,7 +45,55 @@ interface AnalyticsData {
 
 const Analytics = () => {
   const navigate = useNavigate();
-  const { exportAnalyticsReport, exportJobsReport, loading: exportLoading } = useExport();
+  const {
+    exportAnalyticsReport,
+    exportJobsReport,
+    loading: exportLoading,
+  } = useExport();
+
+  // Generate monthly stats from real data
+  const generateMonthlyStats = (jobs: any[], applications: any[]) => {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+
+    return months.slice(0, currentMonth + 1).map((month, index) => {
+      const monthDate = new Date(currentDate.getFullYear(), index, 1);
+      const nextMonthDate = new Date(currentDate.getFullYear(), index + 1, 1);
+
+      const monthJobs =
+        jobs?.filter((job) => {
+          const jobDate = new Date(job.posted_date);
+          return jobDate >= monthDate && jobDate < nextMonthDate;
+        }).length || 0;
+
+      const monthApplications =
+        applications?.filter((app) => {
+          const appDate = new Date(app.applied_date);
+          return appDate >= monthDate && appDate < nextMonthDate;
+        }).length || 0;
+
+      return {
+        month,
+        jobs: monthJobs,
+        applications: monthApplications,
+        users: Math.floor(monthApplications * 0.6), // Estimate based on applications
+      };
+    });
+  };
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     totalJobs: 0,
     activeJobs: 0,
@@ -67,70 +115,73 @@ const Analytics = () => {
 
       // Fetch jobs data
       const { data: jobs, error: jobsError } = await supabase
-        .from('jobs')
-        .select('*');
+        .from("jobs")
+        .select("*");
 
       if (jobsError) throw jobsError;
 
       // Fetch applications data
       const { data: applications, error: applicationsError } = await supabase
-        .from('applications')
-        .select('*');
+        .from("applications")
+        .select("*");
 
       if (applicationsError) throw applicationsError;
 
       // Fetch users data
       const { count: usersCount, error: usersError } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
+        .from("profiles")
+        .select("*", { count: "exact", head: true });
 
       if (usersError) throw usersError;
 
       // Calculate basic stats
       const totalJobs = jobs?.length || 0;
-      const activeJobs = jobs?.filter(job => job.is_active).length || 0;
+      const activeJobs = jobs?.filter((job) => job.is_active).length || 0;
       const totalApplications = applications?.length || 0;
       const totalUsers = usersCount || 0;
 
-      // Generate monthly stats (mock data for demo)
-      const monthlyStats = [
-        { month: 'Jan', jobs: 12, applications: 45, users: 23 },
-        { month: 'Feb', jobs: 15, applications: 67, users: 34 },
-        { month: 'Mar', jobs: 18, applications: 89, users: 45 },
-        { month: 'Apr', jobs: 22, applications: 123, users: 67 },
-        { month: 'May', jobs: 25, applications: 156, users: 89 },
-        { month: 'Jun', jobs: 28, applications: 189, users: 112 },
-      ];
+      // Generate monthly stats from real data
+      const monthlyStats = generateMonthlyStats(jobs, applications);
 
       // Calculate department stats
-      const departmentCounts = jobs?.reduce((acc: any, job) => {
-        acc[job.department] = (acc[job.department] || 0) + 1;
-        return acc;
-      }, {}) || {};
+      const departmentCounts =
+        jobs?.reduce((acc: any, job) => {
+          acc[job.department] = (acc[job.department] || 0) + 1;
+          return acc;
+        }, {}) || {};
 
-      const departmentStats = Object.entries(departmentCounts).map(([department, jobCount]) => {
-        const applicationCount = applications?.filter(app => 
-          jobs?.find(job => job.id === app.job_id)?.department === department
-        ).length || 0;
-        
-        return {
-          department,
-          jobCount: jobCount as number,
-          applicationCount,
-        };
-      });
+      const departmentStats = Object.entries(departmentCounts).map(
+        ([department, jobCount]) => {
+          const applicationCount =
+            applications?.filter(
+              (app) =>
+                jobs?.find((job) => job.id === app.job_id)?.department ===
+                department
+            ).length || 0;
+
+          return {
+            department,
+            jobCount: jobCount as number,
+            applicationCount,
+          };
+        }
+      );
 
       // Calculate application status stats
-      const statusCounts = applications?.reduce((acc: any, app) => {
-        acc[app.status] = (acc[app.status] || 0) + 1;
-        return acc;
-      }, {}) || {};
+      const statusCounts =
+        applications?.reduce((acc: any, app) => {
+          acc[app.status] = (acc[app.status] || 0) + 1;
+          return acc;
+        }, {}) || {};
 
-      const applicationStatusStats = Object.entries(statusCounts).map(([status, count]) => ({
-        status,
-        count: count as number,
-        percentage: Math.round(((count as number) / totalApplications) * 100) || 0,
-      }));
+      const applicationStatusStats = Object.entries(statusCounts).map(
+        ([status, count]) => ({
+          status,
+          count: count as number,
+          percentage:
+            Math.round(((count as number) / totalApplications) * 100) || 0,
+        })
+      );
 
       setAnalytics({
         totalJobs,
@@ -141,9 +192,8 @@ const Analytics = () => {
         departmentStats,
         applicationStatusStats,
       });
-
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      console.error("Error fetching analytics:", error);
     } finally {
       setLoading(false);
     }
@@ -151,18 +201,18 @@ const Analytics = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'applied':
-        return 'bg-blue-100 text-blue-800';
-      case 'under_review':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'interview':
-        return 'bg-purple-100 text-purple-800';
-      case 'accepted':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
+      case "applied":
+        return "bg-blue-100 text-blue-800";
+      case "under_review":
+        return "bg-yellow-100 text-yellow-800";
+      case "interview":
+        return "bg-purple-100 text-purple-800";
+      case "accepted":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -180,21 +230,27 @@ const Analytics = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center mb-4">
-            <Button variant="ghost" onClick={() => navigate('/admin')} className="mr-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/admin")}
+              className="mr-4"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Analytics & Reports</h1>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Analytics & Reports
+              </h1>
               <p className="text-muted-foreground">
                 Comprehensive insights into recruitment performance
               </p>
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={exportJobsReport}
                 disabled={exportLoading}
               >
@@ -210,8 +266,8 @@ const Analytics = () => {
                   </>
                 )}
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={exportAnalyticsReport}
                 disabled={exportLoading}
               >
@@ -240,11 +296,15 @@ const Analytics = () => {
 
           <Card className="shadow-soft">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Applications</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Applications
+              </CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analytics.totalApplications}</div>
+              <div className="text-2xl font-bold">
+                {analytics.totalApplications}
+              </div>
               <div className="flex items-center text-xs text-muted-foreground">
                 <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
                 +23% from last month
@@ -302,12 +362,23 @@ const Analytics = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {analytics.monthlyStats.map((stat, index) => (
-                      <div key={stat.month} className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{stat.month}</span>
+                      <div
+                        key={stat.month}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="text-sm font-medium">
+                          {stat.month}
+                        </span>
                         <div className="flex items-center space-x-4 text-sm">
-                          <span className="text-blue-600">{stat.jobs} jobs</span>
-                          <span className="text-green-600">{stat.applications} apps</span>
-                          <span className="text-purple-600">{stat.users} users</span>
+                          <span className="text-blue-600">
+                            {stat.jobs} jobs
+                          </span>
+                          <span className="text-green-600">
+                            {stat.applications} apps
+                          </span>
+                          <span className="text-purple-600">
+                            {stat.users} users
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -325,15 +396,22 @@ const Analytics = () => {
                 <CardContent>
                   <div className="space-y-3">
                     {analytics.applicationStatusStats.map((stat) => (
-                      <div key={stat.status} className="flex items-center justify-between">
+                      <div
+                        key={stat.status}
+                        className="flex items-center justify-between"
+                      >
                         <div className="flex items-center space-x-2">
                           <Badge className={getStatusColor(stat.status)}>
-                            {stat.status.replace('_', ' ').toUpperCase()}
+                            {stat.status.replace("_", " ").toUpperCase()}
                           </Badge>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium">{stat.count}</span>
-                          <span className="text-xs text-muted-foreground">({stat.percentage}%)</span>
+                          <span className="text-sm font-medium">
+                            {stat.count}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            ({stat.percentage}%)
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -351,7 +429,10 @@ const Analytics = () => {
               <CardContent>
                 <div className="space-y-4">
                   {analytics.departmentStats.map((dept) => (
-                    <div key={dept.department} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div
+                      key={dept.department}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
                       <div>
                         <h3 className="font-medium">{dept.department}</h3>
                         <p className="text-sm text-muted-foreground">
@@ -359,8 +440,12 @@ const Analytics = () => {
                         </p>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold">{dept.applicationCount}</div>
-                        <p className="text-xs text-muted-foreground">applications</p>
+                        <div className="text-2xl font-bold">
+                          {dept.applicationCount}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          applications
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -378,21 +463,29 @@ const Analytics = () => {
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-green-600">
-                      {analytics.applicationStatusStats.find(s => s.status === 'accepted')?.count || 0}
+                      {analytics.applicationStatusStats.find(
+                        (s) => s.status === "accepted"
+                      )?.count || 0}
                     </div>
                     <p className="text-sm text-muted-foreground">Hired</p>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-purple-600">
-                      {analytics.applicationStatusStats.find(s => s.status === 'interview')?.count || 0}
+                      {analytics.applicationStatusStats.find(
+                        (s) => s.status === "interview"
+                      )?.count || 0}
                     </div>
                     <p className="text-sm text-muted-foreground">Interviews</p>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-yellow-600">
-                      {analytics.applicationStatusStats.find(s => s.status === 'under_review')?.count || 0}
+                      {analytics.applicationStatusStats.find(
+                        (s) => s.status === "under_review"
+                      )?.count || 0}
                     </div>
-                    <p className="text-sm text-muted-foreground">Under Review</p>
+                    <p className="text-sm text-muted-foreground">
+                      Under Review
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -408,12 +501,18 @@ const Analytics = () => {
                 <div className="space-y-6">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="p-4 border rounded-lg">
-                      <h3 className="font-medium mb-2">Peak Application Days</h3>
-                      <p className="text-sm text-muted-foreground">Monday and Tuesday see 40% more applications</p>
+                      <h3 className="font-medium mb-2">
+                        Peak Application Days
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Monday and Tuesday see 40% more applications
+                      </p>
                     </div>
                     <div className="p-4 border rounded-lg">
                       <h3 className="font-medium mb-2">Average Time to Hire</h3>
-                      <p className="text-sm text-muted-foreground">14 days from application to offer</p>
+                      <p className="text-sm text-muted-foreground">
+                        14 days from application to offer
+                      </p>
                     </div>
                   </div>
                   <div className="p-4 border rounded-lg">
@@ -421,15 +520,21 @@ const Analytics = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Software Engineer</span>
-                        <span className="text-muted-foreground">45 applications</span>
+                        <span className="text-muted-foreground">
+                          45 applications
+                        </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Content Producer</span>
-                        <span className="text-muted-foreground">38 applications</span>
+                        <span className="text-muted-foreground">
+                          38 applications
+                        </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Marketing Specialist</span>
-                        <span className="text-muted-foreground">32 applications</span>
+                        <span className="text-muted-foreground">
+                          32 applications
+                        </span>
                       </div>
                     </div>
                   </div>
